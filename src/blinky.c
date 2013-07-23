@@ -112,11 +112,11 @@ void TIMER32_0_IRQHandler(void)
  * @brief	main routine for blinky example
  * @return	Function should not exit.
  */
-int main(void)
+int main_blinky(void)
 {
 	uint32_t timerFreq;
 
-	Board_Init();
+//	Board_Init();
 
 	/* Enable and setup SysTick Timer at a periodic rate */
 	//SysTick_Config(SystemCoreClock / TICKRATE_HZ1);
@@ -140,9 +140,9 @@ int main(void)
 	NVIC_EnableIRQ(TIMER_32_0_IRQn);
 
 	/* LEDs toggle in interrupt handlers */
-	while (1) {
-		__WFI();
-	}
+//	while (1) {
+//		__WFI();
+//	}
 
 	return 0;
 }
