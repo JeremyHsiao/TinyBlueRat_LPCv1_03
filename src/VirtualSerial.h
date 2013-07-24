@@ -226,4 +226,11 @@ extern "C" {
 }
 #endif
 
+inline void VirtualSerial_OneByteToHost(uint8_t output_char);
+inline void VirtualSerial_MultiByteToHost(uint8_t *to_host_data, uint16_t bytes_to_write );
+extern uint8_t VirtualSerial_OneByteFromHost(uint8_t *from_host_data);
+extern uint16_t VirtualSerial_MultiByteFromHost(uint8_t *from_host_data, uint16_t bytes_to_read );
+extern void VirtualSerial_Init(void);
+extern void VirtualSerial_USB_USBTask(void);
+
 #endif /* __VIRTUALSERIAL_H_ */

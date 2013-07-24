@@ -144,7 +144,7 @@ int main_blinky(void)
 //		__WFI();
 //	}
 
-	return 0;
+	return 1;
 }
 
 /**

@@ -41,8 +41,6 @@
  * Public types/enumerations/variables
  ****************************************************************************/
 
-extern int main_blinky(void);
-
 #define ECHO_CHARACTER_TASK     (0)
 #define CDC_BRIDGE_TASK         (ECHO_CHARACTER_TASK + 1)
 
@@ -74,107 +72,12 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
  */
 // static FILE USBSerialStream;
 
-/** Select example task, currently lpc11Uxx and lpc17xx don't support for bridging task
- * Only LPC18xx has this feature */
-#define CDC_TASK_SELECT ECHO_CHARACTER_TASK
-
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
-
-/** Configures the board hardware and chip peripherals for the demo's functionality. */
-static void SetupHardware(void)
-{
-	Board_Init();
-	USB_Init(VirtualSerial_CDC_Interface.Config.PortNumber, USB_MODE_Device);
-
-#if defined(USB_DEVICE_ROM_DRIVER)
-	UsbdCdc_Init();
-#endif
-}
-
-#if (CDC_TASK_SELECT == ECHO_CHARACTER_TASK)
-/** Checks for data input, reply back to the host. */
-static void EchoCharacter(void)
-{
-	/* Echo back character */
-	uint8_t recv_byte[CDC_TXRX_EPSIZE];
-#if !defined(USB_DEVICE_ROM_DRIVER)
-	if (CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface)) {
-		recv_byte[0] = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
-		CDC_Device_SendData(&VirtualSerial_CDC_Interface, (char *) recv_byte, 1);
-	}
-#else
-	uint32_t recv_count;
-	recv_count = UsbdCdc_RecvData(recv_byte, CDC_TXRX_EPSIZE);
-	if (recv_count) {
-		UsbdCdc_SendData(recv_byte, recv_count);
-	}
-#endif
-
-}
-
-#else
-/** USB-UART Bridge Task */
-static void CDC_Bridge_Task(void)
-{
-	/* Echo back character */
-	uint8_t out_buff[CDC_TXRX_EPSIZE], in_buff[CDC_TXRX_EPSIZE];
-	uint32_t recv_count;
-#if !defined(USB_DEVICE_ROM_DRIVER)
-	recv_count = CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface);
-	while (recv_count--) {
-		out_buff[0] = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
-		Serial_Send((uint8_t *) out_buff, 1, BLOCKING);
-	}
-
-	recv_count = Serial_Revc(in_buff, CDC_TXRX_EPSIZE, NONE_BLOCKING);
-	if (recv_count) {
-		CDC_Device_SendData(&VirtualSerial_CDC_Interface, (char *) in_buff, recv_count);
-	}
-#else
-	recv_count = UsbdCdc_RecvData(out_buff, CDC_TXRX_EPSIZE);
-	if (recv_count) {
-		Serial_Send((uint8_t *) out_buff, recv_count, BLOCKING);
-	}
-
-	recv_count = Serial_Revc(in_buff, CDC_TXRX_EPSIZE, NONE_BLOCKING);
-	if (recv_count) {
-		UsbdCdc_SendData(in_buff, recv_count);
-	}
-#endif
-}
-
-#endif
-
 /*****************************************************************************
  * Public functions
- ****************************************************************************/
-
-/** Main program entry point. This routine contains the overall program flow, including initial
- *  setup of all components and the main program loop.
- */
-int main(void)
-{
-	SetupHardware();
-	main_blinky();
-
-	for (;; ) {
-#if defined(USB_DEVICE_ROM_DRIVER)
-		UsbdCdc_IO_Buffer_Sync_Task();
-#endif
-
-#if (CDC_TASK_SELECT == ECHO_CHARACTER_TASK)
-		EchoCharacter();
-#else
-		CDC_Bridge_Task();
-#endif
-#if !defined(USB_DEVICE_ROM_DRIVER)
-		// CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
-		USB_USBTask(VirtualSerial_CDC_Interface.Config.PortNumber, USB_MODE_Device);
-#endif
-	}
-}
+****************************************************************************/
 
 /** Event handler for the library USB Connection event. */
 void EVENT_USB_Device_Connect(void)
@@ -215,3 +118,51 @@ void EVENT_UsbdCdc_SetLineCode(CDC_LINE_CODING *line_coding)
 }
 
 #endif
+
+inline void VirtualSerial_OneByteToHost(uint8_t output_char)
+{
+	uint8_t to_host_data[1];
+
+	to_host_data[0] = output_char;
+	CDC_Device_SendData(&VirtualSerial_CDC_Interface, (char *)  to_host_data, 1);
+}
+
+inline void VirtualSerial_MultiByteToHost(uint8_t *to_host_data, uint16_t bytes_to_write )
+{
+	CDC_Device_SendData(&VirtualSerial_CDC_Interface, (char *) to_host_data, bytes_to_write);
+}
+
+uint8_t VirtualSerial_OneByteFromHost(uint8_t *from_host_data)
+{
+	if (CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface)) {
+		from_host_data[0] = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+uint16_t VirtualSerial_MultiByteFromHost(uint8_t *from_host_data, uint16_t bytes_to_read )
+{
+	uint16_t	remaining_byte = bytes_to_read, index = 0;
+	while ((remaining_byte>0)&&(CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface)))
+	{
+		from_host_data[index] = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
+		remaining_byte--;
+		index++;
+	}
+	return index;
+}
+
+void VirtualSerial_Init(void)
+{
+	USB_Init(VirtualSerial_CDC_Interface.Config.PortNumber, USB_MODE_Device);
+}
+
+void VirtualSerial_USB_USBTask(void)
+{
+	// CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
+	USB_USBTask(VirtualSerial_CDC_Interface.Config.PortNumber, USB_MODE_Device);
+}
