@@ -76,16 +76,19 @@
  * Public functions
  ****************************************************************************/
 
+uint8_t toggle_bit = 0;
+uint8_t show_message_off, show_message_on;
+
+
 /**
  * @brief	Handle interrupt from SysTick timer
  * @return	Nothing
  */
-void SysTick_Handler(void)
-{
-	Board_LED_Set(0, false);
-}
-
-uint8_t toggle_bit = 0;
+//void SysTick_Handler(void)
+//{
+//	Board_LED_Set(0, false);
+//	show_message_off=1;
+//}
 
 /**
  * @brief	Handle interrupt from 32-bit timer
@@ -93,17 +96,26 @@ uint8_t toggle_bit = 0;
  */
 void TIMER32_0_IRQHandler(void)
 {
+	const char *Str_Off = "123\r\n";
+	const char *Str_On  = "987\r\n";
+
 	if (Chip_TIMER_MatchPending(LPC_TIMER32_0, 1)) {
 		Chip_TIMER_ClearMatch(LPC_TIMER32_0, 1);
 		if(toggle_bit!=0)
 		{
 			toggle_bit=0;
 			Board_LED_Set(0, false);
+			//show_message_off=1;
+			//UARTputstr("123\r\n");
+			VirtualSerial_MultiByteToHost(Str_Off,strlen(Str_Off));
 		}
 		else
 		{
 			toggle_bit=1;
 			Board_LED_Set(0, true);
+			//show_message_on=1;
+			//UARTputstr("987\r\n");
+			VirtualSerial_MultiByteToHost(Str_On,strlen(Str_On));
 		}
 	}
 }

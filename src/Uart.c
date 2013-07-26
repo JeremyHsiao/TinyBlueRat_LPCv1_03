@@ -128,9 +128,9 @@ int UART_DeInit(void)
 //
 // Here is my own API based on LPC Open API
 //
-inline uint8_t ReadOneByteFromUARTRingBuffer(uint8_t *return_data)
+inline uint16_t ReadOneByteFromUARTRingBuffer(uint8_t *return_data)
 {
-	uint8_t pop_byte_cnt;
+	uint16_t pop_byte_cnt;
 
 	//int Chip_UART_ReadRB(LPC_USART_T *pUART, RINGBUFF_T *pRB, void *data, int bytes)
 	pop_byte_cnt = Chip_UART_ReadRB(LPC_USART, &rxring, (void *)return_data, 1);
@@ -145,15 +145,15 @@ inline void WriteOneByteToUARTRingBuffer(uint8_t sent_data)
 	Chip_UART_SendRB(LPC_USART, &txring, (const void *)temp_data, 1);
 }
 
-inline uint8_t ReadMultiByteFromUARTRingBuffer(uint8_t *return_data, uint8_t bytes_to_read)
+inline uint16_t ReadMultiByteFromUARTRingBuffer(uint8_t *return_data, uint16_t bytes_to_read)
 {
-	uint8_t pop_byte_cnt;
+	uint16_t pop_byte_cnt;
 
 	pop_byte_cnt = Chip_UART_ReadRB(LPC_USART, &rxring, (void *)return_data, bytes_to_read);
 	return pop_byte_cnt;
 }
 
-inline void WriteMultiByteToUARTRingBuffer(uint8_t *sent_data, uint8_t bytes_to_write)
+inline void WriteMultiByteToUARTRingBuffer(uint8_t *sent_data, uint16_t bytes_to_write)
 {
 	Chip_UART_SendRB(LPC_USART, &txring, (const void *)sent_data, bytes_to_write);
 }

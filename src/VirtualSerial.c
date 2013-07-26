@@ -30,12 +30,25 @@
  * this code.
  */
 
+#include "chip.h"
+#include "board.h"
+#include "string.h"
 
 #include "VirtualSerial.h"
+
 
 /*****************************************************************************
  * Private types/enumerations/variables
  ****************************************************************************/
+
+/* Transmit and receive ring buffers */
+STATIC RINGBUFF_T cdc_txring;
+
+/* Ring buffer size */
+#define CDC_UART_RB_SIZE (250)
+
+/* Transmit and receive buffers */
+static uint8_t	cdc_txbuff[CDC_UART_RB_SIZE];
 
 /*****************************************************************************
  * Public types/enumerations/variables
@@ -119,22 +132,104 @@ void EVENT_UsbdCdc_SetLineCode(CDC_LINE_CODING *line_coding)
 
 #endif
 
-inline void VirtualSerial_OneByteToHost(uint8_t output_char)
+//inline void VirtualSerial_OneByteToHost(uint8_t output_char)
+//{
+//	uint8_t to_host_data[1];
+//
+//	to_host_data[0] = output_char;
+//	CDC_Device_SendData(&VirtualSerial_CDC_Interface, (char *)  to_host_data, 1);
+//}
+//
+//inline void VirtualSerial_MultiByteToHost(uint8_t *to_host_data, uint16_t bytes_to_write )
+//{
+//	CDC_Device_SendData(&VirtualSerial_CDC_Interface, (char *) to_host_data, bytes_to_write);
+//}
+
+//void VirtualSerial_OneByteToHost(uint8_t output_char)
+//{
+//	uint8_t to_host_data[1], ret;
+//
+//	to_host_data[0] = output_char;
+//	ret = RingBuffer_Insert(&cdc_txring, to_host_data);
+//	while(ret==0)
+//	{
+//		// Cannot insert to Ring buffer -> need to consume it first
+//		VirtualSerial_FinishDataTyHost();
+//		ret = RingBuffer_Insert(&cdc_txring, to_host_data);
+//	}
+//}
+//
+//void VirtualSerial_MultiByteToHost(uint8_t *to_host_data, uint16_t bytes_to_write )
+//{
+//	int ret, bytes = bytes_to_write;
+//	uint8_t *p8 = to_host_data;
+//
+//	ret = RingBuffer_InsertMult(&cdc_txring, p8, bytes);
+//	bytes -= ret;
+//	p8 += ret;
+//	VirtualSerial_FinishDataTyHost();
+//
+//	/* Do this till all bytes are queued */
+//	while (bytes) {
+//		/* A proper wait handler must be added here */
+//		ret = RingBuffer_InsertMult(&cdc_txring, p8, bytes);
+//		bytes -= ret;
+//		p8 += ret;
+//	}
+//}
+
+void VirtualSerial_OneByteToHost(uint8_t output_char)
 {
-	uint8_t to_host_data[1];
+	uint8_t to_host_data[1], ret;
 
 	to_host_data[0] = output_char;
-	CDC_Device_SendData(&VirtualSerial_CDC_Interface, (char *)  to_host_data, 1);
+	ret = RingBuffer_Insert(&cdc_txring, to_host_data);
+	while(ret==0)
+	{
+		// Cannot insert to Ring buffer -> need to consume it first
+		VirtualSerial_FinishDataTyHost();
+		ret = RingBuffer_Insert(&cdc_txring, to_host_data);
+	}
 }
 
-inline void VirtualSerial_MultiByteToHost(uint8_t *to_host_data, uint16_t bytes_to_write )
+void VirtualSerial_MultiByteToHost(uint8_t *to_host_data, uint16_t bytes_to_write )
 {
-	CDC_Device_SendData(&VirtualSerial_CDC_Interface, (char *) to_host_data, bytes_to_write);
+	int ret, bytes = bytes_to_write;
+	uint8_t *p8 = to_host_data;
+
+	ret = RingBuffer_InsertMult(&cdc_txring, p8, bytes);
+	bytes -= ret;
+	p8 += ret;
+
+	/* Do this till all bytes are queued */
+	while (bytes>0)
+	{
+		// Flush out ring buffer data before continuing.
+		VirtualSerial_FinishDataTyHost();
+		/* A proper wait handler must be added here */
+		ret = RingBuffer_InsertMult(&cdc_txring, p8, bytes);
+		bytes -= ret;
+		p8 += ret;
+	}
 }
 
-uint8_t VirtualSerial_OneByteFromHost(uint8_t *from_host_data)
+void VirtualSerial_FinishDataTyHost(void)
 {
-	if (CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface)) {
+	int bytes_to_write = -1;
+	uint8_t to_host_data[VIRTUAL_SERIAL_UART_SIZE];
+
+	bytes_to_write = RingBuffer_PopMult(&cdc_txring, (void *) to_host_data, VIRTUAL_SERIAL_UART_SIZE);
+	while(bytes_to_write>0)
+	{
+		CDC_Device_SendData(&VirtualSerial_CDC_Interface, (char *) to_host_data, bytes_to_write);
+		bytes_to_write = RingBuffer_PopMult(&cdc_txring, (void *) to_host_data, VIRTUAL_SERIAL_UART_SIZE);
+	}
+}
+
+int16_t VirtualSerial_OneByteFromHost(uint8_t *from_host_data)
+{
+	if (CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface))
+	{
 		from_host_data[0] = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
 		return 1;
 	}
@@ -144,7 +239,7 @@ uint8_t VirtualSerial_OneByteFromHost(uint8_t *from_host_data)
 	}
 }
 
-uint16_t VirtualSerial_MultiByteFromHost(uint8_t *from_host_data, uint16_t bytes_to_read )
+int16_t VirtualSerial_MultiByteFromHost(uint8_t *from_host_data, uint16_t bytes_to_read )
 {
 	uint16_t	remaining_byte = bytes_to_read, index = 0;
 	while ((remaining_byte>0)&&(CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface)))
@@ -159,6 +254,8 @@ uint16_t VirtualSerial_MultiByteFromHost(uint8_t *from_host_data, uint16_t bytes
 void VirtualSerial_Init(void)
 {
 	USB_Init(VirtualSerial_CDC_Interface.Config.PortNumber, USB_MODE_Device);
+
+	RingBuffer_Init(&cdc_txring, cdc_txbuff, 1, CDC_UART_RB_SIZE);
 }
 
 void VirtualSerial_USB_USBTask(void)

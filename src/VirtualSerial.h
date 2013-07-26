@@ -215,8 +215,10 @@ extern "C" {
 /** LED mask for the library LED driver, to indicate that an error has occurred in the USB interface. */
 #define LEDMASK_USB_ERROR        (LEDS_LED1 | LEDS_LED3)
 
-#define ECHO_CHARACTER_TASK     (0)
-#define CDC_BRIDGE_TASK         (ECHO_CHARACTER_TASK + 1)
+//#define ECHO_CHARACTER_TASK     (0)
+//#define CDC_BRIDGE_TASK         (ECHO_CHARACTER_TASK + 1)
+
+#define VIRTUAL_SERIAL_UART_SIZE	(64)			// This one is used for UART message via Virtual Serial Port
 
 /**
  * @}
@@ -226,10 +228,11 @@ extern "C" {
 }
 #endif
 
-inline void VirtualSerial_OneByteToHost(uint8_t output_char);
-inline void VirtualSerial_MultiByteToHost(uint8_t *to_host_data, uint16_t bytes_to_write );
-extern uint8_t VirtualSerial_OneByteFromHost(uint8_t *from_host_data);
-extern uint16_t VirtualSerial_MultiByteFromHost(uint8_t *from_host_data, uint16_t bytes_to_read );
+extern void VirtualSerial_OneByteToHost(uint8_t output_char);
+extern void VirtualSerial_MultiByteToHost(uint8_t *to_host_data, uint16_t bytes_to_write );
+extern void VirtualSerial_FinishDataTyHost(void);
+extern int16_t VirtualSerial_OneByteFromHost(uint8_t *from_host_data);
+extern int16_t VirtualSerial_MultiByteFromHost(uint8_t *from_host_data, uint16_t bytes_to_read );
 extern void VirtualSerial_Init(void);
 extern void VirtualSerial_USB_USBTask(void);
 

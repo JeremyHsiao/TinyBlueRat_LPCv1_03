@@ -61,8 +61,13 @@ static void SetupHardware(void)
 {
 	Board_Init();
 	VirtualSerial_Init();
+	UARTInit(115200);
 	main_blinky();
 }
+
+extern uint8_t show_message_off, show_message_on;
+extern void UARTputstr(char *pFmt);
+
 
 /*****************************************************************************
  * Public functions
@@ -78,5 +83,16 @@ int main(void)
 	for (;; ) {
 		EchoCharacter();	// Read and write back to Virtual Serial Port
 		VirtualSerial_USB_USBTask();
+//		if(show_message_off==1)
+//		{
+//			UARTputstr("123\r\n");
+//			show_message_off=0;
+//		}
+//		if(show_message_on==1)
+//		{
+//			UARTputstr("987\r\n");
+//			show_message_on=0;
+//		}
+		VirtualSerial_FinishDataTyHost();
 	}
 }
