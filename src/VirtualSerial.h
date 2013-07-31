@@ -236,4 +236,10 @@ extern int16_t VirtualSerial_MultiByteFromHost(uint8_t *from_host_data, uint16_t
 extern void VirtualSerial_Init(void);
 extern void VirtualSerial_USB_USBTask(void);
 
+extern volatile uint32_t		LastCaptureTime_IR;
+extern volatile uint32_t		LastCaptureTime_CEC;
+extern volatile uint32_t		LastCaptureTime_HSync;
+extern volatile uint32_t		PWM_period;
+extern volatile uint32_t		PWM_duty_cycle;
+
 #endif /* __VIRTUALSERIAL_H_ */

@@ -28,12 +28,21 @@
 #include "Io.h"
 #include "VirtualSerial.h"
 
-volatile uint8_t 		SW_Timer_Timeout = 0;
+#ifdef _MY_UNIT_TEST_
+extern void IR_RX_TIMER32_0_CAP0_IRQHandler(void) {}
+extern void IR_TX_TIMER32_0_MATCH0_IRQHandler(void) {}
+extern void IR_TX_TIMER32_0_MATCH1_IRQHandler(void) {}
+extern void IR_TX_TIMER32_0_MATCH2_IRQHandler(void) {}
+#else
+extern void IR_RX_TIMER32_0_CAP0_IRQHandler(void);
+extern void IR_TX_TIMER32_0_MATCH0_IRQHandler(void);
+extern void IR_TX_TIMER32_0_MATCH1_IRQHandler(void);
+extern void IR_TX_TIMER32_0_MATCH2_IRQHandler(void);
+#endif // _MY_UNIT_TEST_
+
 volatile uint32_t		LastCaptureTime_IR;
 volatile uint32_t		LastCaptureTime_CEC;
 volatile uint32_t		LastCaptureTime_HSync;
-volatile uint16_t		H_high_width, H_low_width, repeat_cnt = 0, sync_wakeup=0;
-volatile uint32_t		IR_Transmitter_Running;
 volatile uint32_t		PWM_period;
 volatile uint32_t		PWM_duty_cycle;
 
@@ -74,21 +83,25 @@ void TIMER32_0_IRQHandler(void)
 {
 	if (Chip_TIMER_CapturePending(LPC_TIMER32_0, CAPTURE_0))
 	{
+		IR_RX_TIMER32_0_CAP0_IRQHandler();
 		Chip_TIMER_ClearCapture(LPC_TIMER32_0, CAPTURE_0);
 	}
 
 	if (Chip_TIMER_MatchPending(LPC_TIMER32_0, MATCH_0))
 	{
+		IR_TX_TIMER32_0_MATCH0_IRQHandler();
 		Chip_TIMER_ClearMatch(LPC_TIMER32_0, MATCH_0);
 	}
 
 	if (Chip_TIMER_MatchPending(LPC_TIMER32_0, MATCH_1))
 	{
+		IR_TX_TIMER32_0_MATCH1_IRQHandler();
 		Chip_TIMER_ClearMatch(LPC_TIMER32_0, MATCH_1);
 	}
 
 	if (Chip_TIMER_MatchPending(LPC_TIMER32_0, MATCH_2))
 	{
+		IR_TX_TIMER32_0_MATCH2_IRQHandler();
 		Chip_TIMER_ClearMatch(LPC_TIMER32_0, MATCH_2);
 	}
 

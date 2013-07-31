@@ -63,12 +63,13 @@ static void SetupHardware(void)
 	VirtualSerial_Init();
 	UARTInit(115200);
 	init_timer();
-	//main_blinky();
+#ifdef _MY_UNIT_TEST_
+	main_blinky();
+#endif // #ifdef _MY_UNIT_TEST_
+
 }
 
 extern uint8_t show_message_off, show_message_on;
-extern void UARTputstr(char *pFmt);
-
 
 /*****************************************************************************
  * Public functions
