@@ -25,8 +25,39 @@
 #include "board.h"
 #include "string.h"
 #include "Timer.h"
+#include "Io.h"
+#include "VirtualSerial.h"
 
-extern void TEST_TIMER_Match_IRQHandler(void);
+volatile uint8_t 		SW_Timer_Timeout = 0;
+volatile uint32_t		LastCaptureTime_IR;
+volatile uint32_t		LastCaptureTime_CEC;
+volatile uint32_t		LastCaptureTime_HSync;
+volatile uint16_t		H_high_width, H_low_width, repeat_cnt = 0, sync_wakeup=0;
+volatile uint32_t		IR_Transmitter_Running;
+volatile uint32_t		PWM_period;
+volatile uint32_t		PWM_duty_cycle;
+
+inline void BLINKY_LED_MATCH_IRQHandler(void)
+{
+	const char *Str_Off = "01234\r\n";
+	const char *Str_On  = "98765\r\n";
+
+	Chip_TIMER_AddMatch(LPC_TIMER32_0,MATCH_3,(500 * TIMER0_1mS_CNT));
+	if(Board_LED_Test(0)!=false)
+	{
+		Board_LED_Set(0, false);
+		//show_message_off=1;
+		//UARTputstr("123\r\n");
+		VirtualSerial_MultiByteToHost(Str_Off,strlen(Str_Off));
+	}
+	else	// If LED is false => set to true
+	{
+		Board_LED_Set(0, true);
+		//show_message_on=1;
+		//UARTputstr("987\r\n");
+		VirtualSerial_MultiByteToHost(Str_On,strlen(Str_On));
+	}
+}
 
 /******************************************************************************
 ** Function name:		TIMER32_0_IRQHandler
@@ -53,7 +84,6 @@ void TIMER32_0_IRQHandler(void)
 
 	if (Chip_TIMER_MatchPending(LPC_TIMER32_0, MATCH_1))
 	{
-		TEST_TIMER_Match_IRQHandler();
 		Chip_TIMER_ClearMatch(LPC_TIMER32_0, MATCH_1);
 	}
 
@@ -64,6 +94,7 @@ void TIMER32_0_IRQHandler(void)
 
 	if (Chip_TIMER_MatchPending(LPC_TIMER32_0, MATCH_3))
 	{
+		BLINKY_LED_MATCH_IRQHandler();
 		Chip_TIMER_ClearMatch(LPC_TIMER32_0, MATCH_3);
 	}
 	return;
@@ -302,255 +333,136 @@ void TIMER16_1_IRQHandler(void)
 //  }
 //  return;
 //}
-//
-///******************************************************************************
-//** Function name:		init_timer
-//**
-//** Descriptions:		Initialize timer, set timer interval, reset timer,
-//**				install timer interrupt handler
-//**
-//** parameters:		timer number and timer interval
-//** Returned value:	None
-//**
-//******************************************************************************/
-//void init_timer32(uint8_t timer_num, uint32_t TimerInterval)
-//{
-//  if ( timer_num == 0 )
-//  {
-//    /* Some of the I/O pins need to be clearfully planned if
-//    you use below module because JTAG and TIMER CAP/MAT pins are muxed. */
-//    LPC_SYSCON->SYSAHBCLKCTRL |= (1<<9);
-//    LPC_IOCON->PIO1_5 &= ~0x07;	/*  Timer0_32 I/O config */
-//    LPC_IOCON->PIO1_5 |= 0x02;	/* Timer0_32 CAP0 */
-//    // Selects function CT32B0_CAP0. (P1_5)
-//
-//#ifdef __JTAG_DISABLED
-//    LPC_IOCON->R_PIO0_11 &= ~0x07;
-//    LPC_IOCON->R_PIO0_11 |= 0x03;	/* Timer0_32 MAT3 */
-//#endif
-//
-//    // MR2 Match for SystemTimer (1ms-based)
-//    LPC_TMR32B0->MR2 = LPC_TMR32B0->TC + (1 * TIMER0_1mS_CNT); // 1 ms
-//    // 31:0 MATCH Timer counter match value.
-//    LPC_TMR32B0->MCR |= ((0x1)<<6);//;			/* Interrupt/Reset on MRx */
-//    // Interrupt on MR2: an interrupt is generated when MR0 matches the value in the TC.
-//
-//    // MR3 Match for blinking LED every 0.5 sec
-//    LPC_TMR32B0->MR3 = LPC_TMR32B0->TC + (500 * TIMER0_1mS_CNT); // next 0.5 sec
-//    // 31:0 MATCH Timer counter match value.
-//    LPC_TMR32B0->MCR |= ((0x1)<<9);//;			/* Interrupt/Reset on MRx */
-//    // Interrupt on MR3: an interrupt is generated when MR0 matches the value in the TC.
-//
-//	LPC_TMR32B0->CCR = ((0x1<<1)|(0x1<<2)|(0x1));
-//	// Capture on CT32Bn_CAP0 falling edge: a sequence of 1 then 0 on CT32Bn_CAP0 will cause CR0 to be loaded with the contents of TC.
-//	// Interrupt on CT32Bn_CAP0 event: a CR0 load due to a CT32Bn_CAP0 event will generate an interrupt.
-//	// Capture on CT32Bn_CAP0 rising edge: a sequence of 0 then 1 on CT32Bn_CAP0 will cause CR0 to be loaded with the contents of TC.
-//    // P1_5 falling edge, CR0 loaded with TC, and interrupt generated
-//	LPC_TMR32B0->PR = TIMER0_PRESCALER - 1; // Prescaler set to 47 (means prescaler is 48), making a 1 MHz timer
-//	LastCaptureTime_IR = LPC_TMR32B0->TC;
-//
-//    /* Enable the TIMER0 Interrupt */
-//    NVIC_EnableIRQ(TIMER_32_0_IRQn);
-//  }
-//  else if ( timer_num == 1 )
-//  {
-//#if 0
-//	  /* Some of the I/O pins need to be clearfully planned if
-//    you use below module because JTAG and TIMER CAP/MAT pins are muxed. */
-//    LPC_SYSCON->SYSAHBCLKCTRL |= (1<<10);
-//    LPC_IOCON->R_PIO1_0 &= ~0x07;	/*  Timer1_32 I/O config */
-//    LPC_IOCON->R_PIO1_0 |= 0x03;	/* Timer1_32 CAP0 */ // NOTE: different value from P1_5!!
-//    // Selects function CT32B1_CAP0. (P1_0)
-//
-//#ifdef __JTAG_DISABLED
-//    LPC_IOCON->R_PIO1_0  &= ~0x07;	/*  Timer1_32 I/O config */
-//    LPC_IOCON->R_PIO1_0  |= 0x03;	/* Timer1_32 CAP0 */
-//    LPC_IOCON->R_PIO1_1  &= ~0x07;
-//    LPC_IOCON->R_PIO1_1  |= 0x03;	/* Timer1_32 MAT0 */
-//    LPC_IOCON->R_PIO1_2 &= ~0x07;
-//    LPC_IOCON->R_PIO1_2 |= 0x03;	/* Timer1_32 MAT1 */
-//    LPC_IOCON->SWDIO_PIO1_3  &= ~0x07;
-//    LPC_IOCON->SWDIO_PIO1_3  |= 0x03;	/* Timer1_32 MAT2 */
-//#endif
-//
-//	LPC_TMR32B1->CCR = ((0x1<<1)|(0x1<<2)|(0x1));
-//	// Capture on CT32Bn_CAP0 falling edge: a sequence of 1 then 0 on CT32Bn_CAP0 will cause CR0 to be loaded with the contents of TC.
-//	// Interrupt on CT32Bn_CAP0 event: a CR0 load due to a CT32Bn_CAP0 event will generate an interrupt.
-//	// Capture on CT32Bn_CAP0 rising edge: a sequence of 0 then 1 on CT32Bn_CAP0 will cause CR0 to be loaded with the contents of TC.
-//    // P1_5 falling edge, CR0 loaded with TC, and interrupt generated
-//
-//	LPC_TMR32B1->PR = TIMER1_PRESCALER - 1; // Prescaler set to 0 (means prescaler is 1), making a 48 MHz timer
-//	LastCaptureTime_CEC = LPC_TMR32B1->TC;
-//
-//    /* Enable the TIMER1 Interrupt */
-//    NVIC_EnableIRQ(TIMER_32_1_IRQn);
-//#endif // #if 0
-//  }
-//  return;
-//}
-//
-//void init_timer16(uint8_t timer_num)
-//{
-//	if ( timer_num == 0 )
-//	{
-//		LPC_SYSCON->SYSAHBCLKCTRL |= (1<<7);
-//		LPC_IOCON->PIO0_2 &= ~0x07;	/* Timer0_16 I/O config */
-//		LPC_IOCON->PIO0_2 |= 0x02;	/* Timer0_16 CAP0 */
-//		// Selects function CT16_CAP0. (P0_2)
-//
-//		LPC_TMR16B0->CCR = ((0x1<<1)|(0x1<<2)|(0x1));
-//		// Capture on CT16_CAP0 falling edge: a sequence of 1 then 0 on CT16_CAP0 will cause CR0 to be loaded with the contents of TC.
-//		// Capture on CT16_CAP0 rising edge:  a sequence of 0 then 1 on CT16_CAP0 will cause CR0 to be loaded with the contents of TC.
-//		// Interrupt on CT16_CAP0 event: a CR0 load due to a CT16_CAP0 event will generate an interrupt.
-//
-//		LPC_TMR16B0->PR = TIMER16B0_PRESCALER - 1;
-//		LastCaptureTime_CEC = (LPC_TMR16B0->TC) & 0xffff;
-//
-//		/* Enable the TIMER1 Interrupt */
-//		NVIC_EnableIRQ(TIMER_16_0_IRQn);
-//	}
-//	else if ( timer_num == 1 )
-//	{
-//		LPC_SYSCON->SYSAHBCLKCTRL |= (1<<8);
-//		LPC_IOCON->PIO1_8 &= ~0x07;	/* Timer16_1 I/O config */
-//		LPC_IOCON->PIO1_8 |= 0x01;	/* Timer16_1 CAP0 */
-//		// Selects function CT16B1_CAP0. (P1_8)
-//
-//		LPC_TMR16B1->CCR = ((0x1<<1)|(0x1<<2)|(0x1));
-//		// Capture on CT16_CAP1 falling edge: a sequence of 1 then 0 on CT16_CAP1 will cause CR0 to be loaded with the contents of TC.
-//		// Capture on CT16_CAP1 rising edge:  a sequence of 0 then 1 on CT16_CAP1 will cause CR0 to be loaded with the contents of TC.
-//		// Interrupt on CT16_CAP1 event: a CR0 load due to a CT16_CAP1 event will generate an interrupt.
-//
-//		LPC_TMR16B1->PR = TIMER16B1_PRESCALER - 1;
-//		LastCaptureTime_HSync = (LPC_TMR16B1->TC) & 0xffff;
-//
-//		/* Enable the TIMER1 Interrupt */
-//		NVIC_EnableIRQ(TIMER_16_1_IRQn);
-//	}
-//	return;
-//}
-//
-///******************************************************************************
-//** Function name:		init_timer32PWM
-//**
-//** Descriptions:		Initialize timer as PWM
-//**
-//** parameters:		timer number, period and match enable:
-//**				match_enable[0] = PWM for MAT0
-//**				match_enable[1] = PWM for MAT1
-//**				match_enable[2] = PWM for MAT2
-//** Returned value:	None
-//**
-//******************************************************************************/
-//void init_timer32PWM(uint8_t timer_num, uint32_t period, uint8_t match_enable)
-//{
-//  uint32_t		timer32_1_period;
-//
-//  disable_timer32(timer_num);
-//  if (timer_num == 1)
-//  {
-//    /* Some of the I/O pins need to be clearfully planned if
-//    you use below module because JTAG and TIMER CAP/MAT pins are muxed. */
-//    LPC_SYSCON->SYSAHBCLKCTRL |= (1<<10);
-//
-//    /* Setup the external match register */
-//    LPC_TMR32B1->EMR = (1<<EMC3)|(1<<EMC2)|(2<<EMC1)|(1<<EMC0)|(1<<3)|(match_enable);
-//
-//    /* Setup the outputs */
-//    /* If match0 is enabled, set the output */
-//    if (match_enable & 0x01)
-//    {
-//      LPC_IOCON->R_PIO1_1  &= ~0x07;
-//      LPC_IOCON->R_PIO1_1  |= 0x03;		/* Timer1_32 MAT0 */
-//    }
-//    /* If match1 is enabled, set the output */
-//    if (match_enable & 0x02)
-//    {
-//      LPC_IOCON->R_PIO1_2 &= ~0x07;
-//      LPC_IOCON->R_PIO1_2 |= 0x03;		/* Timer1_32 MAT1 */
-//    }
-//    /* If match2 is enabled, set the output */
-//    if (match_enable & 0x04)
-//    {
-//      LPC_IOCON->SWDIO_PIO1_3   &= ~0x07;
-//      LPC_IOCON->SWDIO_PIO1_3   |= 0x03;		/* Timer1_32 MAT2 */
-//    }
-//    /* If match3 is enabled, set the output */
-//    if (match_enable & 0x08)
-//    {
-//      LPC_IOCON->PIO1_4           &= ~0x07;
-//      LPC_IOCON->PIO1_4           |= 0x02;		/* Timer1_32 MAT3 */
-//    }
-//
-//    /* Enable the selected PWMs and enable Match3 */
-//    LPC_TMR32B1->PWMC = (1<<3)|(match_enable);
-//
-//    /* Setup the match registers */
-//    /* set the period value to a global variable */
-//    timer32_1_period = period;
-//    LPC_TMR32B1->MR3 = timer32_1_period;
-//    timer32_1_period = period / 2;
-//    LPC_TMR32B1->MR0 = timer32_1_period;
-//    LPC_TMR32B1->MR1 = timer32_1_period;
-//    LPC_TMR32B1->MR2 = timer32_1_period;
-//    LPC_TMR32B1->MCR = 1<<10;				/* Reset on MR3 */
-//  }
-//  else
-//  {
-//// PWM for Timer32_0 is not used here
-//#if 0
-//    /* Some of the I/O pins need to be clearfully planned if
-//    you use below module because JTAG and TIMER CAP/MAT pins are muxed. */
-//    LPC_SYSCON->SYSAHBCLKCTRL |= (1<<9);
-//
-//    /* Setup the external match register */
-//    LPC_TMR32B0->EMR = (1<<EMC3)|(2<<EMC2)|(1<<EMC1)|(1<<EMC0)|(1<<3)|(match_enable);
-//
-//    /* Setup the outputs */
-//    /* If match0 is enabled, set the output */
-//    if (match_enable & 0x01)
-//    {
-////	 	LPC_IOCON->PIO1_6           &= ~0x07;
-////	  	LPC_IOCON->PIO1_6           |= 0x02;		/* Timer0_32 MAT0 */
-//    }
-//    /* If match1 is enabled, set the output */
-//    if (match_enable & 0x02)
-//    {
-//      LPC_IOCON->PIO1_7           &= ~0x07;
-//      LPC_IOCON->PIO1_7           |= 0x02;		/* Timer0_32 MAT1 */
-//    }
-//    /* If match2 is enabled, set the output */
-//    if (match_enable & 0x04)
-//    {
-//      LPC_IOCON->PIO0_1           &= ~0x07;
-//      LPC_IOCON->PIO0_1           |= 0x02;		/* Timer0_32 MAT2 */
-//    }
-//    /* If match3 is enabled, set the output */
-//    if (match_enable & 0x08)
-//    {
-//      LPC_IOCON->R_PIO0_11 &= ~0x07;
-//      LPC_IOCON->R_PIO0_11 |= 0x03;		/* Timer0_32 MAT3 */
-////        LPC_IOCON->JTAG_TDI_PIO0_11 &= ~0x07;
-////        LPC_IOCON->JTAG_TDI_PIO0_11 |= 0x03;		/* Timer0_32 MAT3 */
-//
-//    }
-//
-//    /* Enable the selected PWMs and enable Match3 */
-//    LPC_TMR32B0->PWMC = (1<<3)|(match_enable);
-//
-//    /* Setup the match registers */
-//    /* set the period value to a global variable */
-//    timer32_0_period = period;
-//    LPC_TMR32B0->MR3 = timer32_0_period;
-//    LPC_TMR32B0->MR0	= timer32_0_period;	///2;
-//    LPC_TMR32B0->MR1	= timer32_0_period/2;
-//    LPC_TMR32B0->MR2	= timer32_0_period/2;
-//
-//    LPC_TMR32B0->MCR = 1<<10;				/* Reset on MR3 */
-//#endif // 0
-//  }
-//}
-//
+
+/******************************************************************************
+** Function name:		init_timer
+**
+** Descriptions:		Initialize timer, set timer interval, reset timer,
+**				install timer interrupt handler
+**
+** parameters:
+** Returned value:	None
+**
+******************************************************************************/
+void init_timer(void)
+{
+	//
+	// Init Timer32_0
+	//
+	Chip_TIMER_Init(LPC_TIMER32_0);
+	Chip_TIMER_PrescaleSet(LPC_TIMER32_0, (TIMER0_PRESCALER - 1)); // Prescaler set to 47 (means prescaler is 48), making a 1 MHz timer
+
+	// Selects function CT32B0_CAP0. (P1_28)
+	Chip_IOCON_PinMuxSet(LPC_IOCON, IR_RX_GPIO_PORT_NUM, IR_RX_GPIO_BIT_NUM, (PIO1_28_FUNC_CT32B0_CAP0 | PIO1_28_DEFAULT));
+	// Capture 0 is for IR Rx High/Low detection
+	// Capture on CT32Bn_CAP0 falling edge: a sequence of 1 then 0 on CT32Bn_CAP0 will cause CR0 to be loaded with the contents of TC.
+	// Interrupt on CT32Bn_CAP0 event: a CR0 load due to a CT32Bn_CAP0 event will generate an interrupt.
+	// Capture on CT32Bn_CAP0 rising edge: a sequence of 0 then 1 on CT32Bn_CAP0 will cause CR0 to be loaded with the contents of TC.
+	// P1_28 falling edge, CR0 loaded with TC, and interrupt generated
+	Chip_TIMER_CaptureRisingEdgeEnable(LPC_TIMER32_0,CAPTURE_0);
+	Chip_TIMER_CaptureFallingEdgeEnable(LPC_TIMER32_0,CAPTURE_0);
+	Chip_TIMER_CaptureEnableInt(LPC_TIMER32_0,CAPTURE_0);
+	LastCaptureTime_IR = Chip_TIMER_ReadCount(LPC_TIMER32_0);
+
+	// MR0 is IR Tx High/Low control, and set when starting IR Tx
+	Chip_TIMER_MatchDisableInt(LPC_TIMER32_0,MATCH_0);
+
+	// MR1 is SW Delay and set when it is used
+	Chip_TIMER_MatchDisableInt(LPC_TIMER32_0,MATCH_1);
+
+	// MR2 Match for SystemTimer (1ms-based)
+	Chip_TIMER_SetMatch(LPC_TIMER32_0,MATCH_2,(Chip_TIMER_ReadCount(LPC_TIMER32_0)+(1 * TIMER0_1mS_CNT)));
+	Chip_TIMER_MatchEnableInt(LPC_TIMER32_0,MATCH_2);
+	// Interrupt on MR2: an interrupt is generated when MR2 matches the value in the TC.
+
+	// MR3 Match for blinking LED every 0.5 sec
+	Chip_TIMER_SetMatch(LPC_TIMER32_0,MATCH_3,(Chip_TIMER_ReadCount(LPC_TIMER32_0)+(500 * TIMER0_1mS_CNT)));
+	Chip_TIMER_MatchEnableInt(LPC_TIMER32_0,MATCH_3);
+	// Interrupt on MR3: an interrupt is generated when MR0 matches the value in the TC.
+	Chip_TIMER_Enable(LPC_TIMER32_0);
+
+	/* Enable the TIMER32_0 Interrupt */
+	NVIC_EnableIRQ(TIMER_32_0_IRQn);
+
+	//
+	// End of Init Timer32_0
+	//
+
+	//
+	// Init Timer32_1
+	//
+	Chip_TIMER_Init(LPC_TIMER32_1);
+	/* Setup the external match register */
+	// Match0 from high-to-low for PWM output pin
+	Chip_TIMER_ExtMatchControlSet(LPC_TIMER32_1, 1, TIMER_EXTMATCH_CLEAR, MATCH_0);
+	Chip_TIMER_SetMatch(LPC_TIMER32_1,MATCH_0,PWM_period/2);	// 50% duty cycle as default
+	Chip_IOCON_PinMuxSet(LPC_IOCON, IR_TX_GPIO_PORT_NUM, IR_TX_GPIO_BIT_NUM, (PIO1_28_FUNC_CT32B0_CAP0 | PIO1_28_DEFAULT));
+
+	// Match3 is for PWM resetting counter value
+	Chip_TIMER_ExtMatchControlSet(LPC_TIMER32_1, 1, TIMER_EXTMATCH_CLEAR, MATCH_3);
+	Chip_TIMER_SetMatch(LPC_TIMER32_1,MATCH_3,PWM_period);
+	Chip_TIMER_ResetOnMatchEnable(LPC_TIMER32_1,MATCH_3);
+
+	/* Enable the selected PWMs and enable Match3 */
+	IP_TIMER_SetPWMMatchMode(LPC_TIMER32_1, MATCH_PWM_MODE_ENABLE, MATCH_0);
+	IP_TIMER_SetPWMMatchMode(LPC_TIMER32_1, MATCH_PWM_MODE_ENABLE, MATCH_3);
+
+	Chip_TIMER_Enable(LPC_TIMER32_1);
+	/* Enable the TIMER32_1 Interrupt */
+	NVIC_EnableIRQ(TIMER_32_1_IRQn);
+
+	//
+	// End of Init Timer32_1
+	//
+
+	//
+	// Init Timer16_0
+	//
+	Chip_TIMER_Init(LPC_TIMER16_0);
+	Chip_TIMER_PrescaleSet(LPC_TIMER16_0, (TIMER16B0_PRESCALER - 1));
+	LastCaptureTime_CEC = Chip_TIMER_ReadCount(LPC_TIMER16_0) & 0xffff;
+	// Selects function CT16_CAP0. (P1_16)
+	Chip_IOCON_PinMuxSet(LPC_IOCON, IR_RX_GPIO_PORT_NUM, IR_RX_GPIO_BIT_NUM, (PIO1_16_FUNC_CT32B0_CAP0 | PIO1_16_DEFAULT));
+	Chip_TIMER_CaptureRisingEdgeEnable(LPC_TIMER16_0,0);
+	Chip_TIMER_CaptureFallingEdgeEnable(LPC_TIMER16_0,0);
+	Chip_TIMER_CaptureEnableInt(LPC_TIMER16_0,0);
+	// Capture on CT16_CAP0 falling edge: a sequence of 1 then 0 on CT16_CAP0 will cause CR0 to be loaded with the contents of TC.
+	// Capture on CT16_CAP0 rising edge:  a sequence of 0 then 1 on CT16_CAP0 will cause CR0 to be loaded with the contents of TC.
+	// Interrupt on CT16_CAP0 event: a CR0 load due to a CT16_CAP0 event will generate an interrupt.
+	Chip_TIMER_Enable(LPC_TIMER16_0);
+
+	/* Enable the TIMER16_0 Interrupt */
+	NVIC_EnableIRQ(TIMER_16_0_IRQn);
+
+
+	//
+	// End of Init Timer16_0
+	//
+
+	//
+	// Init Timer16_1
+	//
+	Chip_TIMER_Init(LPC_TIMER16_1);
+	Chip_TIMER_PrescaleSet(LPC_TIMER16_1, (TIMER16B1_PRESCALER - 1));
+	LastCaptureTime_HSync = ( Chip_TIMER_ReadCount(LPC_TIMER16_1) ) & 0xffff;
+	// Selects function CT16B1_CAP0. (P0_20)
+	Chip_IOCON_PinMuxSet(LPC_IOCON, IR_RX_GPIO_PORT_NUM, IR_RX_GPIO_BIT_NUM, (PIO0_20_FUNC_CT32B0_CAP0 | PIO0_20_DEFAULT));
+	Chip_TIMER_CaptureRisingEdgeEnable(LPC_TIMER16_1,0);
+	Chip_TIMER_CaptureFallingEdgeEnable(LPC_TIMER16_1,0);
+	Chip_TIMER_CaptureEnableInt(LPC_TIMER16_1,0);
+	// Capture on CT16_CAP1 falling edge: a sequence of 1 then 0 on CT16_CAP1 will cause CR0 to be loaded with the contents of TC.
+	// Capture on CT16_CAP1 rising edge:  a sequence of 0 then 1 on CT16_CAP1 will cause CR0 to be loaded with the contents of TC.
+	// Interrupt on CT16_CAP1 event: a CR0 load due to a CT16_CAP1 event will generate an interrupt.
+	Chip_TIMER_Enable(LPC_TIMER16_1);
+
+	/* Enable the TIMER16_1 Interrupt */
+	NVIC_EnableIRQ(TIMER_16_1_IRQn);
+
+	//
+	// End of Init Timer16_1
+	//
+}
+
 ///******************************************************************************
 //** Function name:		pwm32_setMatch
 //**
@@ -726,28 +638,6 @@ void TIMER16_1_IRQHandler(void)
 ////
 ////
 //
-//void Delayus(uint32_t uint32_Value)
-//{
-//	uint32_t wCount, wTc;
-//
-//    wTc = (LPC_TMR32B0->TC);
-//    wCount = wTc + (uint32_Value * TIMER0_1uS_CNT);
-//
-//    LPC_TMR32B0->MR1 = wCount;
-//    // 31:0 MATCH Timer counter match value.
-//    LPC_TMR32B0->MCR |= ((0x1)<<3); //;			/* Interrupt on MR1 */
-//    // Interrupt on MR1: an interrupt is generated when MR1 matches the value in the TC.
-//
-//    SW_Timer_Timeout = 0;
-//    while (SW_Timer_Timeout==0) { }
-//    LPC_TMR32B0->MCR &= ~((0x1)<<3); //;		/* Disable Interrupt on MR1 */
-//}
-//
-//void ClearWatchdogTimer(void)
-//{
-//}
-//
-//
-///******************************************************************************
-//**                            End Of File
-//******************************************************************************/
+/******************************************************************************
+/**                            End Of File
+/******************************************************************************/

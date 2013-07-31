@@ -168,6 +168,11 @@ STATIC INLINE void Chip_TIMER_SetMatch(LPC_TIMER_T *pTMR, int8_t matchnum, uint3
 	IP_TIMER_SetMatch(pTMR, matchnum, matchval);
 }
 
+STATIC INLINE void Chip_TIMER_AddMatch(LPC_TIMER_T *pTMR, int8_t matchnum, uint32_t matchval)
+{
+	IP_TIMER_AddMatch(pTMR, matchnum, matchval);
+}
+
 /**
  * @brief	Reads a capture register
  * @param	pTMR	: Pointer to timer IP register address

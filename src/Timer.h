@@ -21,12 +21,6 @@
 #ifndef __TIMER_H
 #define __TIMER_H
 
-#define MATCH_0		0
-#define MATCH_1		1
-#define MATCH_2		2
-#define MATCH_3		3
-#define CAPTURE_0	0
-
 #define CONST_1MHz						(1000000)
 #define CONST_1KHz						(1000)
 #define CONST_1Hz						(1)

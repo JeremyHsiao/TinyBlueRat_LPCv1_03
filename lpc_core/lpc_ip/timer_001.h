@@ -212,6 +212,11 @@ STATIC INLINE void IP_TIMER_SetMatch(IP_TIMER_001_T *pTimer, int8_t matchnum, ui
 	pTimer->MR[matchnum] = matchval;
 }
 
+STATIC INLINE void IP_TIMER_AddMatch(IP_TIMER_001_T *pTimer, int8_t matchnum, uint32_t matchval)
+{
+	pTimer->MR[matchnum] += matchval;
+}
+
 /**
  * @brief	Reads a capture register
  * @param	pTimer	: Pointer to timer IP register address
@@ -420,6 +425,14 @@ typedef enum IP_TIMER_CAP_SRC_STATE {
 void IP_TIMER_SetCountClockSrc(IP_TIMER_001_T *pTimer,
 							   IP_TIMER_CAP_SRC_STATE_T capSrc, int8_t capnum);
 
+
+typedef enum IP_TIMER_PWM_MODE_ENABLE_DISABLE {
+	MATCH_PWM_MODE_DISABLE  = 0,
+	MATCH_PWM_MODE_ENABLE   = 1
+} IP_TIMER_PWM_MODE_ENABLE_DISABLE_T;
+
+void IP_TIMER_SetPWMMatchMode(IP_TIMER_001_T *pTimer,
+							  IP_TIMER_PWM_MODE_ENABLE_DISABLE_T PWM_Mode_set_value, int8_t matchnum);
 /**
  * @}
  */

@@ -62,7 +62,8 @@ static void SetupHardware(void)
 	Board_Init();
 	VirtualSerial_Init();
 	UARTInit(115200);
-	main_blinky();
+	init_timer();
+	//main_blinky();
 }
 
 extern uint8_t show_message_off, show_message_on;

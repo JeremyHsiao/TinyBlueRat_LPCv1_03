@@ -81,3 +81,9 @@ void IP_TIMER_SetTimerClockSrc(IP_TIMER_001_T *pTimer,
 {
 	pTimer->CTCR = (uint32_t) capSrc | ((uint32_t) capnum) << 2;
 }
+
+void IP_TIMER_SetPWMMatchMode(IP_TIMER_001_T *pTimer,
+							  IP_TIMER_PWM_MODE_ENABLE_DISABLE_T PWM_Mode_set_value, int8_t matchnum)
+{
+	pTimer->PWMC = ((uint32_t) PWM_Mode_set_value) << (matchnum);
+}
