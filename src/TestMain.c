@@ -30,8 +30,15 @@
  * this code.
  */
 
-
+#include "chip.h"
+#include "Board.h"
+#include "string.h"
+#include "i2c.h"
+#include "Uart.h"
 #include "VirtualSerial.h"
+#include "Timer.h"
+#include "adc.h"
+#include "ExtEEPROM.h"
 
 /*****************************************************************************
  * Private types/enumerations/variables
@@ -62,14 +69,38 @@ static void SetupHardware(void)
 	Board_Init();
 	VirtualSerial_Init();
 	UARTInit(115200);
-	init_timer();
+	Timer_Init();
+	I2CInit();
+	ADCInit();
 #ifdef _MY_UNIT_TEST_
 	main_blinky();
 #endif // #ifdef _MY_UNIT_TEST_
 
 }
 
+const char MyUARTTestMessageL1[] = "Welcome to the World.\r\n";
+const char MyUARTTestMessageL2[] = "Build date: " __DATE__ "\r\n";
+const char MyUARTTestMessageL3[] = "Build time: " __TIME__ "\r\n";
+
+static void TestUARTBasicAPI(void)
+{
+	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL1,sizeof(MyUARTTestMessageL1)-1);
+//	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL1,sizeof(MyUARTTestMessageL2)-1);
+//	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL1,sizeof(MyUARTTestMessageL3)-1);
+}
+
+static void TestReadWriteExternalEEPROM(void)
+{
+	uint8_t	I2CRx[sizeof(MyUARTTestMessageL1)];
+
+	WriteEEPROM_OneByte(0x102,'0');
+	WriteEEPROM_MultiByte(0,MyUARTTestMessageL1,sizeof(MyUARTTestMessageL1)-1);
+	WriteEEPROM_OneByte(1,'Z');
+	ReadEEPROM(0, I2CRx, sizeof(MyUARTTestMessageL1)-1);
+}
+
 extern uint8_t show_message_off, show_message_on;
+void TestIrRx(void);
 
 /*****************************************************************************
  * Public functions
@@ -81,9 +112,13 @@ extern uint8_t show_message_off, show_message_on;
 int main(void)
 {
 	SetupHardware();
+	TestUARTBasicAPI();
+	TestReadWriteExternalEEPROM();
+
+	while (1);
 
 	for (;; ) {
-		EchoCharacter();	// Read and write back to Virtual Serial Port
+//		EchoCharacter();	// Read and write back to Virtual Serial Port
 		VirtualSerial_USB_USBTask();
 //		if(show_message_off==1)
 //		{
@@ -95,6 +130,9 @@ int main(void)
 //			UARTputstr("987\r\n");
 //			show_message_on=0;
 //		}
+
+		TestIrRx();
+
 		VirtualSerial_FinishDataTyHost();
 	}
 }

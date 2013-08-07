@@ -111,8 +111,16 @@
 #define PIO0_13_FUNC_CT32B1_MAT0	(0x3)
 #define PIO0_13_DEFAULT				((0x2)<<3)|((0x1)<<7)
 
+#define PIO0_18_FUNC_RX				(0x1)
+#define PIO0_18_DEFAULT				((0x2)<<3)|((0x1)<<7)
+
+#define PIO0_19_FUNC_TX				(0x1)
+#define PIO0_19_DEFAULT				((0x2)<<3)|((0x1)<<7)
+
 #define PIO0_20_FUNC_CT32B0_CAP0	(0x1)
 #define PIO0_20_DEFAULT				((0x2)<<3)|((0x1)<<7)
+
+
 
 //
 // Commented unused to prevent misusing
