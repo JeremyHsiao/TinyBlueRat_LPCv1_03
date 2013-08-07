@@ -39,6 +39,7 @@
 #include "Timer.h"
 #include "adc.h"
 #include "ExtEEPROM.h"
+#include "InternalEEpromAPI.h"
 
 /*****************************************************************************
  * Private types/enumerations/variables
@@ -99,6 +100,19 @@ static void TestReadWriteExternalEEPROM(void)
 	ReadEEPROM(0, I2CRx, sizeof(MyUARTTestMessageL1)-1);
 }
 
+static void TestReadWriteInternalEEPROM(void)
+{
+	uint8_t		TestBuffer[sizeof(MyUARTTestMessageL1)];
+	uint32_t	index;
+
+	memcpy(TestBuffer,MyUARTTestMessageL1,sizeof(MyUARTTestMessageL1));
+	writeInternalEEPROM(0x100, TestBuffer, sizeof(MyUARTTestMessageL1));
+
+	// Clear Content before reading back so that we can be sure whether function works.
+	memset(TestBuffer,0,sizeof(MyUARTTestMessageL1));
+	readInternalEEPROM(0x100, TestBuffer, sizeof(MyUARTTestMessageL1));
+}
+
 extern uint8_t show_message_off, show_message_on;
 void TestIrRx(void);
 
@@ -113,7 +127,8 @@ int main(void)
 {
 	SetupHardware();
 	TestUARTBasicAPI();
-	TestReadWriteExternalEEPROM();
+	//TestReadWriteExternalEEPROM();
+	TestReadWriteInternalEEPROM();
 
 	while (1);
 

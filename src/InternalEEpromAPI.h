@@ -21,8 +21,8 @@
 #define __EEPROM_H
 
 #define EEPROM_PROFILE 1
-void writeInternalEEPROM( uint8_t* eeAddress, uint8_t* buffAddress, uint32_t byteCount );
-void readInternalEEPROM( uint8_t* eeAddress, uint8_t* buffAddress, uint32_t byteCount );
+void writeInternalEEPROM( uint32_t eeAddress, uint8_t* buffAddress, uint32_t byteCount );
+void readInternalEEPROM( uint32_t eeAddress, uint8_t* buffAddress, uint32_t byteCount );
 
 #endif /* end __EEPROM_H */
 /*****************************************************************************

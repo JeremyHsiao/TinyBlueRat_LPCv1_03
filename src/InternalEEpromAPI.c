@@ -44,9 +44,9 @@ static const IAP iap_entry = (IAP) IAP_LOCATION;
 //Param3: System Clock Frequency (CCLK) in kHz
 //
 //Return Code CMD_SUCCESS | SRC_ADDR_NOT_MAPPED | DST_ADDR_NOT_MAPPED 
-void writeInternalEEPROM( uint8_t* eeAddress, uint8_t* buffAddress, uint32_t byteCount )
+void writeInternalEEPROM( uint32_t eeAddress, uint8_t* buffAddress, uint32_t byteCount )
 {	
-	unsigned int command[5], result[4];	
+	unsigned long command[5], result[4];
 
 	command[0] = 61;                  
 	command[1] = (uint32_t) eeAddress;
@@ -72,9 +72,9 @@ void writeInternalEEPROM( uint8_t* eeAddress, uint8_t* buffAddress, uint32_t byt
 //Param3: System Clock Frequency (CCLK) in kHz
 //
 //Return Code CMD_SUCCESS | SRC_ADDR_NOT_MAPPED | DST_ADDR_NOT_MAPPED
-void readInternalEEPROM( uint8_t* eeAddress, uint8_t* buffAddress, uint32_t byteCount )
+void readInternalEEPROM( uint32_t eeAddress, uint8_t* buffAddress, uint32_t byteCount )
 {
-	unsigned int command[5], result[4];
+	unsigned long command[5], result[4];
 		
 	command[0] = 62;                  
 	command[1] = (uint32_t) eeAddress;
