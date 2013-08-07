@@ -25,7 +25,9 @@
  * copyright, permission, and disclaimer notice must appear in all copies of 
  * this code.
 ****************************************************************************/
+#include "chip.h"
 #include "board.h"
+#include "string.h"
 #include "adc.h"
 
 #define _LPC_ADC_ID LPC_ADC
@@ -69,6 +71,8 @@ uint32_t ADCRead(CHIP_ADC_CHANNEL_T Ch_No)
 
 	/* Read ADC value */
 	Chip_ADC_Read_Value(_LPC_ADC_ID, Ch_No, &dataADC);
+
+	return dataADC;
 
 }
 /*********************************************************************************
