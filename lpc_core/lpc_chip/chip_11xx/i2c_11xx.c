@@ -209,6 +209,19 @@ int Chip_I2C_MasterCmdRead(I2C_ID_T id, uint8_t slaveAddr, uint8_t cmd, uint8_t 
 	return len - xfer.rxSz;
 }
 
+// Tx 2 bytes and receive an array of bytes
+int Chip_I2C_MasterCmd2ByteRead(I2C_ID_T id, uint8_t slaveAddr, uint8_t *cmd2byte, uint8_t *buff, int len)
+{
+	I2C_XFER_T xfer = {0};
+	xfer.slaveAddr = slaveAddr;
+	xfer.txBuff = cmd2byte;
+	xfer.txSz = 2;
+	xfer.rxBuff = buff;
+	xfer.rxSz = len;
+	while (Chip_I2C_MasterTransfer(id, &xfer) == I2C_STATUS_ARBLOST) {}
+	return len - xfer.rxSz;
+}
+
 /* Sequential master read */
 int Chip_I2C_MasterRead(I2C_ID_T id, uint8_t slaveAddr, uint8_t *buff, int len)
 {

@@ -149,6 +149,8 @@ int Chip_I2C_MasterSend(I2C_ID_T id, uint8_t slaveAddr, const uint8_t *buff, uin
  */
 int Chip_I2C_MasterCmdRead(I2C_ID_T id, uint8_t slaveAddr, uint8_t cmd, uint8_t *buff, int len);
 
+int Chip_I2C_MasterCmd2ByteRead(I2C_ID_T id, uint8_t slaveAddr, uint8_t *cmd2byte, uint8_t *buff, int len);
+
 /**
  * @brief	Get pointer to current function handling the events
  * @param	id			: I2C peripheral ID (I2C0, I2C1 ... etc)
