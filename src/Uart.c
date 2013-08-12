@@ -33,8 +33,9 @@
 #include "chip.h"
 #include "board.h"
 #include "string.h"
-
 #include "Uart.h"
+#include "Io.h"
+#include "LPC11U37_401.h"
 
 /*****************************************************************************
  * Private types/enumerations/variables
@@ -83,6 +84,9 @@ int UARTInit(uint32_t baudrate)
 // Jeremy: board is assumed to be inited before.
 //	Board_Init();
 	Board_UART_Init();
+	// TxRx Pin Mux has been already set in  SystemInit();
+	//Chip_IOCON_PinMuxSet(LPC_IOCON, UART_RX_GPIO_PORT_NUM, UART_RX_GPIO_BIT_NUM, (PIO0_18_FUNC_RX | PIO0_18_DEFAULT));
+	//Chip_IOCON_PinMuxSet(LPC_IOCON, UART_TX_GPIO_PORT_NUM, UART_TX_GPIO_BIT_NUM, (PIO0_19_FUNC_TX | PIO0_19_DEFAULT));
 
 	/* Setup UART for 115.2K8N1 */
 	Chip_UART_Init(LPC_USART);
@@ -133,7 +137,7 @@ inline uint16_t ReadOneByteFromUARTRingBuffer(uint8_t *return_data)
 	uint16_t pop_byte_cnt;
 
 	//int Chip_UART_ReadRB(LPC_USART_T *pUART, RINGBUFF_T *pRB, void *data, int bytes)
-	pop_byte_cnt = Chip_UART_ReadRB(LPC_USART, &rxring, (void *)return_data, 1);
+	pop_byte_cnt = Chip_UART_ReadRB(LPC_USART, &rxring, return_data, 1);
 	return pop_byte_cnt;
 }
 
@@ -142,14 +146,14 @@ inline void WriteOneByteToUARTRingBuffer(uint8_t sent_data)
 	uint8_t temp_data[1];
 
 	temp_data[0] = sent_data;
-	Chip_UART_SendRB(LPC_USART, &txring, (const void *)temp_data, 1);
+	Chip_UART_SendRB(LPC_USART, &txring, temp_data, 1);
 }
 
 inline uint16_t ReadMultiByteFromUARTRingBuffer(uint8_t *return_data, uint16_t bytes_to_read)
 {
 	uint16_t pop_byte_cnt;
 
-	pop_byte_cnt = Chip_UART_ReadRB(LPC_USART, &rxring, (void *)return_data, bytes_to_read);
+	pop_byte_cnt = Chip_UART_ReadRB(LPC_USART, &rxring, return_data, bytes_to_read);
 	return pop_byte_cnt;
 }
 

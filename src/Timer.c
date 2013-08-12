@@ -40,7 +40,7 @@ volatile uint32_t		LastCaptureTime_IR;
 volatile uint32_t		LastCaptureTime_CEC;
 volatile uint32_t		LastCaptureTime_HSync;
 volatile uint32_t		PWM_period =  (uint32_t) (PCLK_FREQUENCY/(38000));		// For 38KHz PWM pulse
-volatile uint32_t		PWM_duty_cycle;
+volatile uint32_t		PWM_duty_cycle = 50;
 volatile uint8_t 		SW_Timer_Timeout;
 volatile uint32_t 		SystemTimer;
 
@@ -116,7 +116,7 @@ void TIMER32_0_IRQHandler(void)
 
 	if (Chip_TIMER_MatchPending(LPC_TIMER32_0, MATCH_3))
 	{
-		BLINKY_LED_MATCH_IRQHandler();						// For blinky LED
+//		BLINKY_LED_MATCH_IRQHandler();						// For blinky LED
 		Chip_TIMER_ClearMatch(LPC_TIMER32_0, MATCH_3);
 	}
 	return;
@@ -297,24 +297,32 @@ void Timer_Init(void)
 	// Init Timer32_1
 	//
 	Chip_TIMER_Init(LPC_TIMER32_1);
+	Chip_TIMER_Disable(LPC_TIMER32_1);
+
 	/* Setup the external match register */
-	// Match0 from high-to-low for PWM output pin
+	// Adopt from previous code
 	Chip_TIMER_ExtMatchControlSet(LPC_TIMER32_1, 1, TIMER_EXTMATCH_CLEAR, MATCH_0);
-	Chip_TIMER_SetMatch(LPC_TIMER32_1,MATCH_0,PWM_period/2);	// 50% duty cycle as default
-	Chip_IOCON_PinMuxSet(LPC_IOCON, IR_TX_GPIO_PORT_NUM, IR_TX_GPIO_BIT_NUM, (PIO1_28_FUNC_CT32B0_CAP0 | PIO1_28_DEFAULT));
+	Chip_TIMER_ExtMatchControlSetWithOR(LPC_TIMER32_1, 1, TIMER_EXTMATCH_CLEAR, MATCH_3);   // Use from 2nd ExtMatchCTRL with Chip_TIMER_ExtMatchControlSetWithOR()
+	Chip_TIMER_ExtMatchControlSetWithOR(LPC_TIMER32_1, 0, TIMER_EXTMATCH_SET,   MATCH_1);   // Use from 2nd ExtMatchCTRL with Chip_TIMER_ExtMatchControlSetWithOR()
+	Chip_TIMER_ExtMatchControlSetWithOR(LPC_TIMER32_1, 0, TIMER_EXTMATCH_CLEAR, MATCH_2);   // Use from 2nd ExtMatchCTRL with Chip_TIMER_ExtMatchControlSetWithOR()
+
+	// Match0 from high-to-low for PWM output pin
+	Chip_TIMER_SetMatch(LPC_TIMER32_1,MATCH_0,~(0x1));	// always low as default
+	Chip_IOCON_PinMuxSet(LPC_IOCON, IR_TX_GPIO_PORT_NUM, IR_TX_GPIO_BIT_NUM, (PIO0_13_FUNC_CT32B1_MAT0 | PIO0_13_DEFAULT));
+	Chip_GPIO_WriteDirBit(LPC_GPIO_PORT, IR_TX_GPIO_PORT_NUM, IR_TX_GPIO_BIT_NUM, true);
 
 	// Match3 is for PWM resetting counter value
-	Chip_TIMER_ExtMatchControlSet(LPC_TIMER32_1, 1, TIMER_EXTMATCH_CLEAR, MATCH_3);
 	Chip_TIMER_SetMatch(LPC_TIMER32_1,MATCH_3,PWM_period);
 	Chip_TIMER_ResetOnMatchEnable(LPC_TIMER32_1,MATCH_3);
 
 	/* Enable the selected PWMs and enable Match3 */
 	IP_TIMER_SetPWMMatchMode(LPC_TIMER32_1, MATCH_PWM_MODE_ENABLE, MATCH_0);
-	IP_TIMER_SetPWMMatchMode(LPC_TIMER32_1, MATCH_PWM_MODE_ENABLE, MATCH_3);
+	IP_TIMER_SetPWMMatchModeWithOR(LPC_TIMER32_1, MATCH_PWM_MODE_ENABLE, MATCH_3);
 
 	Chip_TIMER_Enable(LPC_TIMER32_1);
+
 	/* Enable the TIMER32_1 Interrupt */
-	NVIC_EnableIRQ(TIMER_32_1_IRQn);
+	//NVIC_EnableIRQ(TIMER_32_1_IRQn);
 
 	//
 	// End of Init Timer32_1

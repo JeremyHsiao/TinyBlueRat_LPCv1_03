@@ -78,9 +78,10 @@
 					</folderInfo>
 					<folderInfo id="com.crt.advproject.config.exe.debug.1177699178.127450447" name="/" resourcePath="src_app">
 						<toolChain id="com.crt.advproject.toolchain.exe.debug.145514763" name="Code Red MCU Tools" superClass="com.crt.advproject.toolchain.exe.debug" unusedChildren="">
+							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF;org.eclipse.cdt.core.GNU_ELF" id="com.crt.advproject.platform.exe.debug" name="ARM-based MCU (Debug)" superClass="com.crt.advproject.platform.exe.debug"/>
 							<tool id="com.crt.advproject.cpp.exe.debug.1750098284" name="MCU C++ Compiler" superClass="com.crt.advproject.cpp.exe.debug.13992654"/>
 							<tool id="com.crt.advproject.gcc.exe.debug.167248501" name="MCU C Compiler" superClass="com.crt.advproject.gcc.exe.debug.242547664">
-								<option id="gnu.c.compiler.option.preprocessor.def.symbols.911397742" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.911397742" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__REDLIB__"/>
 									<listOptionValue builtIn="false" value="__LPC11U1X__"/>
 									<listOptionValue builtIn="false" value="CORE_M0"/>
@@ -140,30 +141,7 @@
 					</sourceEntries>
 				</configuration>
 			</storageModule>
-			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
-				<externalSettings containerId="nxp_xpresso_11U14_usblib_device;com.crt.advproject.config.lib.debug.1530554860.1888792111.408090377" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
-					<externalSetting>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/LPCUSBlib"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/lpc177x_407x_lpcusblib"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/lpc11Uxx_lpcusblib"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/LPCUSBlib/Debug"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/LPCUSBlib/LPC17XX_Device"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/LPCUSBlib/LPC18XX_Device"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/LPCUSBlib/LPC18xx_Device"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/LPCUSBlib/xpresso_output/LPC18xx_Device"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/lpc177x_407x_lpcusblib/xpresso_output/LPC177x_8x_Device"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/lpc11Uxx_lpcusblib/xpresso_output/LPC11U1x_Device"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="lpc11Uxx_lpcusblib" srcPrefixMapping="" srcRootPath=""/>
-					</externalSetting>
-				</externalSettings>
-				<externalSettings containerId="nxp_xpresso_11u14_board_lib;com.crt.advproject.config.lib.debug.474713969" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
-					<externalSetting>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/nxp_xpresso_11u14_board_lib"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/nxp_xpresso_11u14_board_lib/Debug"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="nxp_xpresso_11u14_board_lib" srcPrefixMapping="" srcRootPath=""/>
-					</externalSetting>
-				</externalSettings>
-			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 			<storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
 			<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 		</cconfiguration>
@@ -214,7 +192,7 @@
 								<option id="com.crt.advproject.gas.arch.1451930064" name="Architecture" superClass="com.crt.advproject.gas.arch" value="com.crt.advproject.gas.target.cm0" valueType="enumerated"/>
 								<option id="com.crt.advproject.gas.thumb.1836547986" name="Thumb mode" superClass="com.crt.advproject.gas.thumb" value="true" valueType="boolean"/>
 								<option id="gnu.both.asm.option.flags.crt.2084856120" name="Assembler flags" superClass="gnu.both.asm.option.flags.crt" value="-c -x assembler-with-cpp -D__REDLIB__ -DDEBUG -D__CODE_RED" valueType="string"/>
-								<option id="gnu.both.asm.option.include.paths.1940855857" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths"/>
+								<option id="gnu.both.asm.option.include.paths.1940855857" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath"/>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.277364677" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 								<inputType id="com.crt.advproject.assembler.input.374150966" name="Additional Assembly Source Files" superClass="com.crt.advproject.assembler.input"/>
 							</tool>
@@ -229,8 +207,8 @@
 									<listOptionValue builtIn="false" value="-Map=&quot;${BuildArtifactFileBaseName}.map&quot;"/>
 									<listOptionValue builtIn="false" value="--gc-sections"/>
 								</option>
-								<option id="gnu.c.link.option.libs.140234762" name="Libraries (-l)" superClass="gnu.c.link.option.libs"/>
-								<option id="gnu.c.link.option.paths.2073858165" name="Library search path (-L)" superClass="gnu.c.link.option.paths"/>
+								<option id="gnu.c.link.option.libs.140234762" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs"/>
+								<option id="gnu.c.link.option.paths.2073858165" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1919068160" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -243,22 +221,7 @@
 					</sourceEntries>
 				</configuration>
 			</storageModule>
-			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
-				<externalSettings containerId="nxp_xpresso_11U14_usblib_device;com.crt.advproject.config.lib.debug.1530554860.1888792111.408090377.1619822993" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
-					<externalSetting>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/nxp_xpresso_11U14_usblib_device"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/nxp_xpresso_11U14_usblib_device/Release"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="nxp_xpresso_11U14_usblib_device" srcPrefixMapping="" srcRootPath=""/>
-					</externalSetting>
-				</externalSettings>
-				<externalSettings containerId="nxp_xpresso_11u14_board_lib;com.crt.advproject.config.lib.release.1397240084" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
-					<externalSetting>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/nxp_xpresso_11u14_board_lib"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/nxp_xpresso_11u14_board_lib/Release"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="nxp_xpresso_11u14_board_lib" srcPrefixMapping="" srcRootPath=""/>
-					</externalSetting>
-				</externalSettings>
-			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 			<storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
 			<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 		</cconfiguration>
@@ -314,25 +277,21 @@
 &lt;/TargetConfig&gt;</projectStorage>
 	</storageModule>
 	<storageModule moduleId="refreshScope" versionNumber="2">
-		<configuration configurationName="Release">
-			<resource resourceType="PROJECT" workspacePath="/nxp_xpresso_11u14_periph_adc"/>
-		</configuration>
-		<configuration configurationName="Debug">
-			<resource resourceType="PROJECT" workspacePath="/nxp_xpresso_11u14_periph_adc"/>
-		</configuration>
+		<configuration configurationName="Release"/>
+		<configuration configurationName="Debug"/>
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="com.crt.advproject.config.exe.debug.1177699178;com.crt.advproject.config.exe.debug.1177699178.;com.crt.advproject.gcc.exe.debug.242547664;com.crt.advproject.compiler.input.1886967024">
+		<scannerConfigBuildInfo instanceId="com.crt.advproject.config.exe.debug.1177699178.1585273843;com.crt.advproject.config.exe.debug.1177699178.1585273843.;com.crt.advproject.gas.exe.debug.1907294360;com.crt.advproject.assembler.input.374150966">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.crt.advproject.GCCManagedMakePerProjectProfile"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="com.crt.advproject.config.exe.debug.1177699178.1585273843;com.crt.advproject.config.exe.debug.1177699178.1585273843.;com.crt.advproject.gcc.exe.debug.1541258820;com.crt.advproject.compiler.input.1116944682">
+		<scannerConfigBuildInfo instanceId="com.crt.advproject.config.exe.debug.1177699178;com.crt.advproject.config.exe.debug.1177699178.;com.crt.advproject.gcc.exe.debug.242547664;com.crt.advproject.compiler.input.1886967024">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.crt.advproject.GCCManagedMakePerProjectProfile"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="com.crt.advproject.config.exe.debug.1177699178;com.crt.advproject.config.exe.debug.1177699178.;com.crt.advproject.gas.exe.debug.703354622;com.crt.advproject.assembler.input.1306960821">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.crt.advproject.GCCManagedMakePerProjectProfile"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="com.crt.advproject.config.exe.debug.1177699178.1585273843;com.crt.advproject.config.exe.debug.1177699178.1585273843.;com.crt.advproject.gas.exe.debug.1907294360;com.crt.advproject.assembler.input.374150966">
+		<scannerConfigBuildInfo instanceId="com.crt.advproject.config.exe.debug.1177699178.1585273843;com.crt.advproject.config.exe.debug.1177699178.1585273843.;com.crt.advproject.gcc.exe.debug.1541258820;com.crt.advproject.compiler.input.1116944682">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.crt.advproject.GCCManagedMakePerProjectProfile"/>
 		</scannerConfigBuildInfo>
 	</storageModule>

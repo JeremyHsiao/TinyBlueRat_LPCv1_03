@@ -67,6 +67,7 @@ void EchoCharacter(void)
 /** Configures the board hardware and chip peripherals for the demo's functionality. */
 static void SetupHardware(void)
 {
+    SystemInit();
 	Board_Init();
 	VirtualSerial_Init();
 	UARTInit(115200);
@@ -86,8 +87,8 @@ const char MyUARTTestMessageL3[] = "Build time: " __TIME__ "\r\n";
 static void TestUARTBasicAPI(void)
 {
 	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL1,sizeof(MyUARTTestMessageL1)-1);
-//	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL1,sizeof(MyUARTTestMessageL2)-1);
-//	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL1,sizeof(MyUARTTestMessageL3)-1);
+	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL1,sizeof(MyUARTTestMessageL2)-1);
+	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL1,sizeof(MyUARTTestMessageL3)-1);
 }
 
 static void TestReadWriteExternalEEPROM(void)
@@ -103,7 +104,6 @@ static void TestReadWriteExternalEEPROM(void)
 static void TestReadWriteInternalEEPROM(void)
 {
 	uint8_t		TestBuffer[sizeof(MyUARTTestMessageL1)];
-	uint32_t	index;
 
 	memcpy(TestBuffer,MyUARTTestMessageL1,sizeof(MyUARTTestMessageL1));
 	writeInternalEEPROM(0x100, TestBuffer, sizeof(MyUARTTestMessageL1));
@@ -115,6 +115,8 @@ static void TestReadWriteInternalEEPROM(void)
 
 extern uint8_t show_message_off, show_message_on;
 void TestIrRx(void);
+void TestIrTx(void);
+void TestIrTxRxInit(void);
 
 /*****************************************************************************
  * Public functions
@@ -125,15 +127,15 @@ void TestIrRx(void);
  */
 int main(void)
 {
-	SetupHardware();
-	TestUARTBasicAPI();
-	//TestReadWriteExternalEEPROM();
-	TestReadWriteInternalEEPROM();
+	TestIrTxRxInit();
 
-	while (1);
+	SetupHardware();
+	//TestUARTBasicAPI();
+	//TestReadWriteExternalEEPROM();
+	//TestReadWriteInternalEEPROM();
 
 	for (;; ) {
-//		EchoCharacter();	// Read and write back to Virtual Serial Port
+		//EchoCharacter();	// Read and write back to Virtual Serial Port
 		VirtualSerial_USB_USBTask();
 //		if(show_message_off==1)
 //		{

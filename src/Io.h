@@ -28,4 +28,7 @@
 #define UART_RX_GPIO_PORT_NUM		0
 #define UART_RX_GPIO_BIT_NUM		18
 
+#define TEST_OUT1_GPIO_PORT_NUM		1
+#define TEST_OUT1_GPIO_BIT_NUM		22
+
 #endif //_IO_H
