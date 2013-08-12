@@ -43,7 +43,10 @@
  * Private functions
  ****************************************************************************/
 
-/* Returns the clock from the speicifc timer base address */
+/* Returns the clock from the specific timer base address */
+//
+// Modified by Jeremy
+//
 static CHIP_SYSCTL_CLOCK_T Chip_Timer_GetClock(LPC_TIMER_T *pTMR)
 {
 	CHIP_SYSCTL_CLOCK_T clk;
@@ -51,8 +54,8 @@ static CHIP_SYSCTL_CLOCK_T Chip_Timer_GetClock(LPC_TIMER_T *pTMR)
 	if (pTMR == LPC_TIMER32_0) {
 		clk = SYSCTL_CLOCK_CT32B0;
 	}
-	else if (pTMR == LPC_TIMER32_0) {
-		clk = SYSCTL_CLOCK_CT32B0;
+	else if (pTMR == LPC_TIMER32_1) {
+		clk = SYSCTL_CLOCK_CT32B1;
 	}
 	else if (pTMR == LPC_TIMER16_0) {
 		clk = SYSCTL_CLOCK_CT16B0;
