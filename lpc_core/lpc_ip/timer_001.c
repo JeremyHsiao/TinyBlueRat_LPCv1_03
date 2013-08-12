@@ -75,6 +75,13 @@ void IP_TIMER_ExtMatchControlSet(IP_TIMER_001_T *pTimer, int8_t initial_state,
 				  (((uint32_t) matchState) << (4 + (matchnum * 2)));
 }
 
+void IP_TIMER_ExtMatchControlSetWithOR(IP_TIMER_001_T *pTimer, int8_t initial_state,
+								 IP_TIMER_PIN_MATCH_STATE_T matchState, int8_t matchnum)
+{
+	pTimer->EMR |= (((uint32_t) initial_state) << matchnum) |
+				  (((uint32_t) matchState) << (4 + (matchnum * 2)));
+}
+
 /* Sets timer count source and edge with the selected passed from CapSrc */
 void IP_TIMER_SetTimerClockSrc(IP_TIMER_001_T *pTimer,
 							   IP_TIMER_CAP_SRC_STATE_T capSrc, int8_t capnum)
@@ -86,4 +93,10 @@ void IP_TIMER_SetPWMMatchMode(IP_TIMER_001_T *pTimer,
 							  IP_TIMER_PWM_MODE_ENABLE_DISABLE_T PWM_Mode_set_value, int8_t matchnum)
 {
 	pTimer->PWMC = ((uint32_t) PWM_Mode_set_value) << (matchnum);
+}
+
+void IP_TIMER_SetPWMMatchModeWithOR(IP_TIMER_001_T *pTimer,
+							  IP_TIMER_PWM_MODE_ENABLE_DISABLE_T PWM_Mode_set_value, int8_t matchnum)
+{
+	pTimer->PWMC |= ((uint32_t) PWM_Mode_set_value) << (matchnum);
 }

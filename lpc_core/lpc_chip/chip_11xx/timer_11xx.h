@@ -356,6 +356,11 @@ STATIC INLINE void Chip_TIMER_ExtMatchControlSet(LPC_TIMER_T *pTMR, int8_t initi
 	IP_TIMER_ExtMatchControlSet(pTMR, initial_state, matchState, matchnum);
 }
 
+STATIC INLINE void Chip_TIMER_ExtMatchControlSetWithOR(LPC_TIMER_T *pTMR, int8_t initial_state,
+												 IP_TIMER_PIN_MATCH_STATE_T matchState, int8_t matchnum)
+{
+	IP_TIMER_ExtMatchControlSet(pTMR, initial_state, matchState, matchnum);
+}
 /**
  * @brief	Sets timer count source and edge with the selected passed from CapSrc.
  *          If CapSrc selected a CAPn pin, select the specific CAPn pin with the capnum value.

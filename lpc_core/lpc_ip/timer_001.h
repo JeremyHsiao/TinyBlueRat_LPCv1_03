@@ -404,6 +404,9 @@ typedef enum IP_TIMER_PIN_MATCH_STATE {
 void IP_TIMER_ExtMatchControlSet(IP_TIMER_001_T *pTimer, int8_t initial_state,
 								 IP_TIMER_PIN_MATCH_STATE_T matchState, int8_t matchnum);
 
+void IP_TIMER_ExtMatchControlSetWithOR(IP_TIMER_001_T *pTimer, int8_t initial_state,
+								 IP_TIMER_PIN_MATCH_STATE_T matchState, int8_t matchnum);
+
 /**
  * @brief Standard timer clock and edge for count source
  */
@@ -433,6 +436,10 @@ typedef enum IP_TIMER_PWM_MODE_ENABLE_DISABLE {
 
 void IP_TIMER_SetPWMMatchMode(IP_TIMER_001_T *pTimer,
 							  IP_TIMER_PWM_MODE_ENABLE_DISABLE_T PWM_Mode_set_value, int8_t matchnum);
+
+void IP_TIMER_SetPWMMatchModeWithOR(IP_TIMER_001_T *pTimer,
+							  IP_TIMER_PWM_MODE_ENABLE_DISABLE_T PWM_Mode_set_value, int8_t matchnum);
+
 /**
  * @}
  */
