@@ -104,6 +104,58 @@ STATIC INLINE void IP_GPIOPININT_IntClear(IP_GPIOPININT_001_T *pGPIOPININT, uint
 	}
 }
 
+//
+// Jeremy Add
+
+//
+STATIC INLINE bool IP_GPIOPININT_CheckRisingEdgeIntEnable(IP_GPIOPININT_001_T *pGPIOPININT, uint8_t PortNum)
+{
+	if ( (!(pGPIOPININT->ISEL & (1 << PortNum))) && (pGPIOPININT->IENR & (1 << PortNum)) )
+	{
+		return (bool) 1;
+	}
+	else
+	{
+		return (bool) 0;
+	}
+}
+
+STATIC INLINE bool IP_GPIOPININT_CheckFallingEdgeIntEnable(IP_GPIOPININT_001_T *pGPIOPININT, uint8_t PortNum)
+{
+	if ( (!(pGPIOPININT->ISEL & (1 << PortNum))) && (pGPIOPININT->IENF & (1 << PortNum)) )
+	{
+		return (bool) 1;
+	}
+	else
+	{
+		return (bool) 0;
+	}
+}
+
+STATIC INLINE bool IP_GPIOPININT_GetRisingEdgeDetect(IP_GPIOPININT_001_T *pGPIOPININT, uint8_t PortNum)
+{
+	return (bool) (((pGPIOPININT->RISE) >> PortNum) & 0x01);
+}
+
+STATIC INLINE void IP_GPIOPININT_ClearRisingEdgeDetect(IP_GPIOPININT_001_T *pGPIOPININT, uint8_t PortNum)
+{
+	if (!(pGPIOPININT->ISEL & (1 << PortNum))) {
+		pGPIOPININT->RISE |= (1 << PortNum);
+	}
+}
+
+STATIC INLINE bool IP_GPIOPININT_GetFallingEdgeDetect(IP_GPIOPININT_001_T *pGPIOPININT, uint8_t PortNum)
+{
+	return (bool) (((pGPIOPININT->FALL) >> PortNum) & 0x01);
+}
+
+STATIC INLINE void IP_GPIOPININT_ClearFallingEdgeDetect(IP_GPIOPININT_001_T *pGPIOPININT, uint8_t PortNum)
+{
+	if (!(pGPIOPININT->ISEL & (1 << PortNum))) {
+		pGPIOPININT->FALL |= (1 << PortNum);
+	}
+}
+
 /**
  * @}
  */

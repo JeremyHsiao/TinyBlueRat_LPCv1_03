@@ -105,6 +105,10 @@
 #define PIO1_28_FUNC_CT32B0_CAP0	(0x1)
 #define PIO1_28_DEFAULT				((0x2)<<3)|((0x1)<<7)
 
+#define PIO1_15_FUNC_PIO1_15		(0x0)
+#define PIO1_15_HYSTERESIS_ENABLE	((0x1)<<5)
+#define PIO1_15_DEFAULT				((0x2)<<3)|((0x1)<<7)
+
 #define PIO1_16_FUNC_CT32B0_CAP0	(0x2)
 #define PIO1_16_DEFAULT				((0x2)<<3)|((0x1)<<7)
 

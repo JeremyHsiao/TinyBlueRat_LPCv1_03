@@ -127,9 +127,9 @@ void TestIrTxRxInit(void);
  */
 int main(void)
 {
-	TestIrTxRxInit();
 
 	SetupHardware();
+	TestIrTxRxInit();
 	//TestUARTBasicAPI();
 	//TestReadWriteExternalEEPROM();
 	//TestReadWriteInternalEEPROM();

@@ -30,7 +30,7 @@
 //void PIOINT2_IRQHandler(void);
 //void PIOINT3_IRQHandler(void);
 void GPIOInit( void );
-void SetGPIOPinInterrupt( uint32_t PinIntNo, uint32_t portNum, uint32_t bitPosi, uint32_t trigger, uint32_t event );
+void SetGPIOPinInterrupt( uint32_t PinIntNo, uint32_t portNum, uint32_t bitPosi, uint32_t edge_trigger, uint32_t event );
 //void GPIOSetInterrupt( uint32_t portNum, uint32_t bitPosi, uint32_t sense,
 //		uint32_t single, uint32_t event );
 //void GPIOIntEnable( uint32_t portNum, uint32_t bitPosi );
