@@ -124,6 +124,7 @@ void TestIrTxRxInit(void) {}
 void TestIrRx(void);
 void TestIrTx(void);
 void TestIrTxRxInit(void);
+int app_main (void);
 #endif //
 
 /*****************************************************************************
@@ -164,5 +165,5 @@ int main(void)
 #else
 	app_main();
 #endif
-
+	return 0;
 }
