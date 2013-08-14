@@ -3,8 +3,8 @@
  *   Project: NXP LPC11xx GPIO example
  *
  *   Description:
- *     This file contains GPIO code example which include GPIO 
- *     initialization, GPIO interrupt handler, and related APIs for 
+ *     This file contains GPIO code example which include GPIO
+ *     initialization, GPIO interrupt handler, and related APIs for
  *     GPIO access.
  *
  ****************************************************************************
@@ -27,7 +27,7 @@
 #include "LPC11U37_401.h"
 
 #ifdef _MY_UNIT_TEST_
-extern void IrDA_Int_Handler(void)) {}
+extern void IrDA_Int_Handler(void) {}
 #else
 extern void IrDA_Int_Handler(void);
 #endif // _MY_UNIT_TEST_
@@ -77,7 +77,7 @@ void FLEX_INT0_IRQHandler(void)
 ** Returned value:		true or false, return false if the VIC table
 **						is full and GPIO interrupt handler can be
 **						installed.
-** 
+**
 *****************************************************************************/
 void GPIOInit( void )
 {

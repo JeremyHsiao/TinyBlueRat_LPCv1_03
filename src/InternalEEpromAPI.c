@@ -28,7 +28,6 @@
 ****************************************************************************/
 #include "chip.h"
 #include "board.h"
-#include "type.h"
 #include "InternalEEpromAPI.h"
 
 #define IAP_LOCATION 0x1FFF1FF1

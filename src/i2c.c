@@ -28,7 +28,6 @@
 #include "chip.h"
 #include "board.h"
 #include "string.h"
-#include "type.h"
 #include "i2c.h"
 
 #define SPEED_100KHZ         100000
