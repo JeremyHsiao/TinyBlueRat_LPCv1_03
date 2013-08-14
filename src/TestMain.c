@@ -50,6 +50,7 @@
  ****************************************************************************/
 
 extern int main_blinky(void);
+extern void SystemInit(void);
 
 /*****************************************************************************
  * Private functions
@@ -71,24 +72,25 @@ static void SetupHardware(void)
 	Board_Init();
 	VirtualSerial_Init();
 	UARTInit(115200);
-	Timer_Init();
-	I2CInit();
-	ADCInit();
 #ifdef _MY_UNIT_TEST_
 	main_blinky();
+#else
+	Timer_Init();
 #endif // #ifdef _MY_UNIT_TEST_
+	I2CInit();
+	ADCInit();
 
 }
 
-const char MyUARTTestMessageL1[] = "Welcome to the World.\r\n";
-const char MyUARTTestMessageL2[] = "Build date: " __DATE__ "\r\n";
-const char MyUARTTestMessageL3[] = "Build time: " __TIME__ "\r\n";
+char MyUARTTestMessageL1[] = "Welcome to the World.\r\n";
+char MyUARTTestMessageL2[] = "Build date: " __DATE__ "\r\n";
+char MyUARTTestMessageL3[] = "Build time: " __TIME__ "\r\n";
 
 static void TestUARTBasicAPI(void)
 {
-	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL1,sizeof(MyUARTTestMessageL1)-1);
-	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL1,sizeof(MyUARTTestMessageL2)-1);
-	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL1,sizeof(MyUARTTestMessageL3)-1);
+	WriteMultiByteToUARTWaitFinish(MyUARTTestMessageL1,sizeof(MyUARTTestMessageL1)-1);
+	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL2,sizeof(MyUARTTestMessageL2)-1);
+	WriteMultiByteToUARTRingBuffer(MyUARTTestMessageL3,sizeof(MyUARTTestMessageL3)-1);
 }
 
 static void TestReadWriteExternalEEPROM(void)
@@ -114,9 +116,15 @@ static void TestReadWriteInternalEEPROM(void)
 }
 
 extern uint8_t show_message_off, show_message_on;
+#ifdef _MY_UNIT_TEST_
+void TestIrRx(void) {}
+void TestIrTx(void) {}
+void TestIrTxRxInit(void) {}
+#else
 void TestIrRx(void);
 void TestIrTx(void);
 void TestIrTxRxInit(void);
+#endif //
 
 /*****************************************************************************
  * Public functions
@@ -127,15 +135,16 @@ void TestIrTxRxInit(void);
  */
 int main(void)
 {
+#ifdef _MY_UNIT_TEST_
 
 	SetupHardware();
 	TestIrTxRxInit();
-	//TestUARTBasicAPI();
+	TestUARTBasicAPI();
 	//TestReadWriteExternalEEPROM();
 	//TestReadWriteInternalEEPROM();
 
 	for (;; ) {
-		//EchoCharacter();	// Read and write back to Virtual Serial Port
+		EchoCharacter();				// Read and write back to Virtual Serial Port
 		VirtualSerial_USB_USBTask();
 //		if(show_message_off==1)
 //		{
@@ -152,4 +161,8 @@ int main(void)
 
 		VirtualSerial_FinishDataTyHost();
 	}
+#else
+	app_main();
+#endif
+
 }
