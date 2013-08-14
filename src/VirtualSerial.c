@@ -45,7 +45,7 @@
 STATIC RINGBUFF_T cdc_txring;
 
 /* Ring buffer size */
-#define CDC_UART_RB_SIZE (250)
+#define CDC_UART_RB_SIZE (256)
 
 /* Transmit and receive buffers */
 static uint8_t	cdc_txbuff[CDC_UART_RB_SIZE];
