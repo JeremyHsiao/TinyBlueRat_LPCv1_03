@@ -45,7 +45,7 @@
 STATIC RINGBUFF_T txring, rxring;
 
 /* Ring buffer size */
-#define UART_RB_SIZE (250)
+#define UART_RB_SIZE (256)		// Due to ring buffer implementation, UART_RB_SIZE must be a number of 2 ^ n
 
 /* Transmit and receive buffers */
 static uint8_t rxbuff[UART_RB_SIZE], txbuff[UART_RB_SIZE];
@@ -162,6 +162,10 @@ inline void WriteMultiByteToUARTRingBuffer(uint8_t *sent_data, uint16_t bytes_to
 	Chip_UART_SendRB(LPC_USART, &txring, (const void *)sent_data, bytes_to_write);
 }
 
+inline void WriteMultiByteToUARTWaitFinish(uint8_t *sent_data, uint16_t bytes_to_write)
+{
+	Chip_UART_SendBlocking(LPC_USART, (const void *)sent_data, bytes_to_write);
+}
 
 
 
