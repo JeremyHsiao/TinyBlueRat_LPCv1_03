@@ -31,4 +31,7 @@
 #define TEST_OUT1_GPIO_PORT_NUM		1
 #define TEST_OUT1_GPIO_BIT_NUM		22
 
+#define ADC_KEY0_GPIO_PORT_NUM      0
+#define ADC_KEY0_GPIO_BIT_NUM       11
+
 #endif //_IO_H

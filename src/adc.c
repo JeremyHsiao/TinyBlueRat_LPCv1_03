@@ -29,6 +29,7 @@
 #include "board.h"
 #include "string.h"
 #include "adc.h"
+#include "Io.h"
 
 #define _LPC_ADC_ID LPC_ADC
 static ADC_Clock_Setup_T ADCSetup;
@@ -47,6 +48,7 @@ void ADCInit(void)
 
 	/*ADC Init */
 	Chip_ADC_Init(_LPC_ADC_ID, &ADCSetup);
+	Chip_IOCON_PinMuxSet(LPC_IOCON, ADC_KEY0_GPIO_PORT_NUM, ADC_KEY0_GPIO_BIT_NUM, PIO0_11_AD0_FILT);
 	Chip_ADC_Channel_Enable_Cmd(_LPC_ADC_ID, ADC_CH0, ENABLE);
 }
 

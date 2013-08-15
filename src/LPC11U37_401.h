@@ -102,6 +102,8 @@
 //
 // Register Mode/Function
 //
+#define PIO0_11_AD0_FILT			(0x02)|((0x2)<<3)|((0x1)<<8)
+
 #define PIO1_28_FUNC_CT32B0_CAP0	(0x1)
 #define PIO1_28_DEFAULT				((0x2)<<3)|((0x1)<<7)
 
