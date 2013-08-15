@@ -85,6 +85,9 @@ void IP_UART_Init(IP_USART_001_T *pUART, IP_UART_ID_T UARTPort)
 	pUART->TER1 = UART_TER1_TXEN;
 	/* Wait for current transmit complete */
 	while (!(pUART->LSR & UART_LSR_THRE)) {}
+	// Jeremy - add
+	while (!(pUART->LSR & UART_LSR_TEMT)) {}
+	// end Jeremy
 	/* Disable Tx */
 	pUART->TER1 = 0;
 #endif

@@ -193,25 +193,19 @@ uint32_t Chip_UART_SendRB(LPC_USART_T *pUART, RINGBUFF_T *pRB, const void *data,
 	int ret;
 	uint8_t *p8 = (uint8_t *) data;
 
-	/* Fill transmit FIFO */
-	txIntEnabled = false;
-	ret = RingBuffer_InsertMult(pRB, p8, bytes);
-	bytes -= ret;
-	p8 += ret;
-	Chip_UART_TXIntHandlerRB(pUART, pRB);
-	txIntEnabled = true;
-
-	/* Enable Transmit FIFO interrupt to start transmit ring
-	   buffer servicing */
-	Chip_UART_IntEnable(pUART, UART_IER_THREINT);
-
-	/* Do this till all bytes are queued */
-	while (bytes) {
-		/* A proper wait handler must be added here */
-		ret = RingBuffer_InsertMult(pRB, p8, bytes);
-		bytes -= ret;
-		p8 += ret;
+	do
+	{
+		Chip_UART_IntDisable(pUART, UART_IER_THREINT);		// Entering critical section
+		if (RingBuffer_Insert(pRB, p8))
+		{
+			bytes --;
+			p8 ++;
+		}
+		txIntEnabled = true;
+		Chip_UART_TXIntHandlerRB(pUART, pRB);
+		Chip_UART_IntEnable(pUART, UART_IER_THREINT);		// Leaving critical section
 	}
+	while (bytes);
 
 	return 0;
 }
