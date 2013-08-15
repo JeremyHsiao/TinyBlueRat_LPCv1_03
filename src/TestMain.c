@@ -115,6 +115,48 @@ static void TestReadWriteInternalEEPROM(void)
 	readInternalEEPROM(0x100, TestBuffer, sizeof(MyUARTTestMessageL1));
 }
 
+static void TestUARTRxTx(void)
+{
+    int			bytes_to_read;
+    uint8_t		uart_rx_data[32];
+
+	bytes_to_read=ReadMultiByteFromUARTRingBuffer(uart_rx_data,32);
+	while (bytes_to_read>0)
+	{
+		WriteMultiByteToUARTRingBuffer(uart_rx_data,bytes_to_read);
+		bytes_to_read=ReadMultiByteFromUARTRingBuffer(uart_rx_data,32);
+	}
+}
+
+static void TestADC_CH0(void)
+{
+	uint32_t	adc_value;
+	uint8_t		value_string[8], index = 4;	// We want to see only 4 digits
+
+	adc_value = ADCRead(ADC_CH0);
+
+	do
+	{
+		uint8_t		temp;
+		temp = (adc_value & 0x0f);
+		if(temp>=10)
+		{
+			temp = temp - 10 + 'A';
+		}
+		else
+		{
+			temp = temp + '0';
+		}
+		index --;
+		value_string[index] = temp;
+		adc_value >>= 4;
+	}
+	while (index>0);
+
+	WriteMultiByteToUARTRingBuffer(value_string,sizeof(value_string));
+
+}
+
 extern uint8_t show_message_off, show_message_on;
 #ifdef _MY_UNIT_TEST_
 void TestIrRx(void) {}
@@ -134,10 +176,10 @@ int app_main (void);
 /** Main program entry point. This routine contains the overall program flow, including initial
  *  setup of all components and the main program loop.
  */
+
 int main(void)
 {
 #ifdef _MY_UNIT_TEST_
-
 	SetupHardware();
 	TestIrTxRxInit();
 	TestUARTBasicAPI();
@@ -159,6 +201,8 @@ int main(void)
 //		}
 
 		TestIrRx();
+		TestUARTRxTx();
+		TestADC_CH0();
 
 		VirtualSerial_FinishDataTyHost();
 	}
@@ -167,3 +211,4 @@ int main(void)
 #endif
 	return 0;
 }
+
