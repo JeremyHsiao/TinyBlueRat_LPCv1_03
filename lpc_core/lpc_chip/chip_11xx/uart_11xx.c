@@ -195,7 +195,8 @@ uint32_t Chip_UART_SendRB(LPC_USART_T *pUART, RINGBUFF_T *pRB, const void *data,
 
 	do
 	{
-		Chip_UART_IntDisable(pUART, UART_IER_THREINT);		// Entering critical section
+		// Entering critical section
+		Chip_UART_IntDisable(pUART, UART_IER_THREINT);
 		if (RingBuffer_Insert(pRB, p8))
 		{
 			bytes --;
@@ -203,7 +204,12 @@ uint32_t Chip_UART_SendRB(LPC_USART_T *pUART, RINGBUFF_T *pRB, const void *data,
 		}
 		txIntEnabled = true;
 		Chip_UART_TXIntHandlerRB(pUART, pRB);
-		Chip_UART_IntEnable(pUART, UART_IER_THREINT);		// Leaving critical section
+		if (!RingBuffer_IsEmpty(pRB))
+		{
+			txIntEnabled = true;
+			Chip_UART_IntEnable(pUART, UART_IER_THREINT);
+		}
+		// Leaving critical section
 	}
 	while (bytes);
 
