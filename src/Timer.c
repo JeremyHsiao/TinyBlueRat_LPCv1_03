@@ -116,7 +116,9 @@ void TIMER32_0_IRQHandler(void)
 
 	if (Chip_TIMER_MatchPending(LPC_TIMER32_0, MATCH_3))
 	{
-//		BLINKY_LED_MATCH_IRQHandler();						// For blinky LED
+#ifdef _MY_UNIT_TEST_
+		BLINKY_LED_MATCH_IRQHandler();						// For blinky LED
+#endif // #ifdef _MY_UNIT_TEST_
 		Chip_TIMER_ClearMatch(LPC_TIMER32_0, MATCH_3);
 	}
 	return;

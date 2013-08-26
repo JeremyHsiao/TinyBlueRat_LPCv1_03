@@ -35,27 +35,25 @@
 #include "string.h"
 
 #include "VirtualSerial.h"
-
+#include "usb_common.h"
 
 /*****************************************************************************
  * Private types/enumerations/variables
  ****************************************************************************/
 
+#if defined(USB_CDC_CLASS) || defined (USB_COMP_MOUSE_CDC_CLASS)
 /* Transmit and receive ring buffers */
-STATIC RINGBUFF_T cdc_txring;
-
-/* Ring buffer size */
-#define CDC_UART_RB_SIZE (256)
+RINGBUFF_T cdc_txring;
 
 /* Transmit and receive buffers */
-static uint8_t	cdc_txbuff[CDC_UART_RB_SIZE];
+uint8_t						cdc_txbuff[CDC_UART_RB_SIZE];
+USB_ClassInfo_CDC_Device_t	*CDC_IF_PTR;
+
+#endif // #if defid(USB_CDC_CLASS) || (USB_COMP_MOUSE_CDC_CLASS)
 
 /*****************************************************************************
  * Public types/enumerations/variables
  ****************************************************************************/
-
-#define ECHO_CHARACTER_TASK     (0)
-#define CDC_BRIDGE_TASK         (ECHO_CHARACTER_TASK + 1)
 
 /** LPCUSBlib CDC Class driver interface configuration and state information. This structure is
  *  passed to all CDC Class driver functions, so that multiple instances of the same class
@@ -91,46 +89,6 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
 /*****************************************************************************
  * Public functions
 ****************************************************************************/
-
-/** Event handler for the library USB Connection event. */
-void EVENT_USB_Device_Connect(void)
-{}
-
-/** Event handler for the library USB Disconnection event. */
-void EVENT_USB_Device_Disconnect(void)
-{}
-
-/** Event handler for the library USB Configuration Changed event. */
-void EVENT_USB_Device_ConfigurationChanged(void)
-{
-	bool ConfigSuccess = true;
-
-	ConfigSuccess &= CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
-
-	//	LEDs_SetAllLEDs(ConfigSuccess ? LEDMASK_USB_READY : LEDMASK_USB_ERROR);
-}
-
-/** Event handler for the library USB Control Request reception event. */
-void EVENT_USB_Device_ControlRequest(void)
-{
-	CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
-}
-
-#if !defined(USB_DEVICE_ROM_DRIVER)
-void EVENT_CDC_Device_LineEncodingChanged(USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo)
-{
-	/*TODO: add LineEncoding processing here
-	 * this is just a simple statement, only Baud rate is set */
-	// Serial_Init(CDCInterfaceInfo->State.LineEncoding.BaudRateBPS, false);
-}
-
-#else
-void EVENT_UsbdCdc_SetLineCode(CDC_LINE_CODING *line_coding)
-{
-	// Serial_Init(VirtualSerial_CDC_Interface.State.LineEncoding.BaudRateBPS, false);
-}
-
-#endif
 
 //inline void VirtualSerial_OneByteToHost(uint8_t output_char)
 //{
@@ -221,16 +179,16 @@ void VirtualSerial_FinishDataTyHost(void)
 	bytes_to_write = RingBuffer_PopMult(&cdc_txring, (void *) to_host_data, VIRTUAL_SERIAL_UART_SIZE);
 	while(bytes_to_write>0)
 	{
-		CDC_Device_SendData(&VirtualSerial_CDC_Interface, (char *) to_host_data, bytes_to_write);
+		CDC_Device_SendData(CDC_IF_PTR, (char *) to_host_data, bytes_to_write);
 		bytes_to_write = RingBuffer_PopMult(&cdc_txring, (void *) to_host_data, VIRTUAL_SERIAL_UART_SIZE);
 	}
 }
 
 int16_t VirtualSerial_OneByteFromHost(uint8_t *from_host_data)
 {
-	if (CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface))
+	if (CDC_Device_BytesReceived(CDC_IF_PTR))
 	{
-		from_host_data[0] = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
+		from_host_data[0] = CDC_Device_ReceiveByte(CDC_IF_PTR);
 		return 1;
 	}
 	else
@@ -242,24 +200,53 @@ int16_t VirtualSerial_OneByteFromHost(uint8_t *from_host_data)
 int16_t VirtualSerial_MultiByteFromHost(uint8_t *from_host_data, uint16_t bytes_to_read )
 {
 	uint16_t	remaining_byte = bytes_to_read, index = 0;
-	while ((remaining_byte>0)&&(CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface)))
+	while ((remaining_byte>0)&&(CDC_Device_BytesReceived(CDC_IF_PTR)))
 	{
-		from_host_data[index] = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
+		from_host_data[index] = CDC_Device_ReceiveByte(CDC_IF_PTR);
 		remaining_byte--;
 		index++;
 	}
 	return index;
 }
 
-void VirtualSerial_Init(void)
-{
-	USB_Init(VirtualSerial_CDC_Interface.Config.PortNumber, USB_MODE_Device);
-
-	RingBuffer_Init(&cdc_txring, cdc_txbuff, 1, CDC_UART_RB_SIZE);
-}
+#ifdef USB_CDC_CLASS
 
 void VirtualSerial_USB_USBTask(void)
 {
 	// CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
-	USB_USBTask(VirtualSerial_CDC_Interface.Config.PortNumber, USB_MODE_Device);
+	USB_USBTask(CDC_IF_PTR->Config.PortNumber, USB_MODE_Device);
 }
+
+//
+// Common function to be implemented
+//
+
+void VirtualSerial_Init(void)
+{
+	CDC_IF_PTR = &VirtualSerial_CDC_Interface;
+
+	USB_Init(CDC_IF_PTR->Config.PortNumber, USB_MODE_Device);
+
+	RingBuffer_Init(&cdc_txring, cdc_txbuff, 1, CDC_UART_RB_SIZE);
+}
+
+// Virtual Serial
+void MyUSB_Init(void)
+{
+	// Init Descriptor
+	DeviceDescriptor = DeviceDescriptor_CDC;
+	ConfigurationDescriptor = ConfigurationDescriptor_CDC;
+	LanguageStringPtr = (USB_Descriptor_String_t *) LanguageString_CDC;
+	ManufacturerStringPtr = (USB_Descriptor_String_t *) ManufacturerString_CDC;
+	ProductStringPtr = (USB_Descriptor_String_t *) ProductString_CDC;
+	// Init others
+	VirtualSerial_Init();
+}
+
+inline void USB_task_in_main_loop(void)
+{
+	VirtualSerial_USB_USBTask();
+	VirtualSerial_FinishDataTyHost();
+}
+// End of Virtual Serial
+#endif // #ifdef USB_CDC_CLASS

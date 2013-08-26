@@ -126,7 +126,8 @@
 #define PIO0_20_FUNC_CT32B0_CAP0	(0x1)
 #define PIO0_20_DEFAULT				((0x2)<<3)|((0x1)<<7)
 
-
+#define PIO0_ALL_DIGITAL_MODE		((0x01)<<7)
+#define PIO1_ALL_RESERVED			((0x01)<<7)
 
 //
 // Commented unused to prevent misusing

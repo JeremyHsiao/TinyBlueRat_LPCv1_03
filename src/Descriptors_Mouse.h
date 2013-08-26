@@ -1,5 +1,5 @@
 /*
- * @brief Virtual Serial device class declarations, definitions for using in application
+ * @brief Mouse device class declarations, definitions for using in application
  *
  * @note
  * Copyright(C) NXP Semiconductors, 2012
@@ -30,8 +30,8 @@
  * this code.
  */
 
-#ifndef __DESCRIPTORS_H_
-#define __DESCRIPTORS_H_
+#ifndef __DESCRIPTORS_MOUSE_H_
+#define __DESCRIPTORS_MOUSE_H_
 
 #include "USB.h"
 
@@ -39,46 +39,37 @@
 extern "C" {
 #endif
 
-/** @defgroup Virtual_Serial_Device_Descriptor Class descriptors
- * @ingroup USB_Virtual_Serial_Device_18xx43xx USB_Virtual_Serial_Device_17xx40xx USB_Virtual_Serial_Device_11Uxx
+/** @defgroup Mouse_Device_Descriptor Class descriptors
+ * @ingroup USB_Mouse_Device_18xx43xx USB_Mouse_Device_17xx40xx USB_Mouse_Device_11Uxx
  * @{
  */
-
-/** Endpoint number of the CDC device-to-host notification IN endpoint. */
-#define CDC_NOTIFICATION_EPNUM         1
-
-/** Endpoint number of the CDC device-to-host data IN endpoint. */
-#define CDC_TX_EPNUM                   2
-
-/** Endpoint number of the CDC host-to-device data OUT endpoint. */
-#if defined(__LPC175X_6X__) || defined(__LPC177X_8X__) || defined(__LPC407X_8X__)
-	#define CDC_RX_EPNUM               5
-#else
-	#define CDC_RX_EPNUM               3
-#endif
-
-/** Size in bytes of the CDC device-to-host notification IN endpoint. */
-#define CDC_NOTIFICATION_EPSIZE        8
-
-/** Size in bytes of the CDC data IN and OUT endpoints. */
-#define CDC_TXRX_EPSIZE                16
 
 /** @brief	Type define for the device configuration descriptor structure. This must be defined in the
  *          application code, as the configuration descriptor contains several sub-descriptors which
  *          vary between devices, and which describe the device's usage to the host.
  */
 typedef struct {
-	USB_Descriptor_Configuration_Header_t    Config;
-	USB_Descriptor_Interface_t               CDC_CCI_Interface;
-	USB_CDC_Descriptor_FunctionalHeader_t    CDC_Functional_Header;
-	USB_CDC_Descriptor_FunctionalACM_t       CDC_Functional_ACM;
-	USB_CDC_Descriptor_FunctionalUnion_t     CDC_Functional_Union;
-	USB_Descriptor_Endpoint_t                CDC_NotificationEndpoint;
-	USB_Descriptor_Interface_t               CDC_DCI_Interface;
-	USB_Descriptor_Endpoint_t                CDC_DataOutEndpoint;
-	USB_Descriptor_Endpoint_t                CDC_DataInEndpoint;
-	unsigned char                            CDC_Termination;
-} USB_Descriptor_Configuration_t;
+	USB_Descriptor_Configuration_Header_t Config;
+	USB_Descriptor_Interface_t            HID_Interface;
+	USB_HID_Descriptor_HID_t              HID_MouseHID;
+	USB_Descriptor_Endpoint_t             HID_ReportINEndpoint;
+	unsigned char                         HID_Termination;
+} USB_Descriptor_Configuration_Mouse_t;
+
+/** Endpoint number of the Mouse HID reporting IN endpoint. */
+#define MOUSE_EPNUM               1
+
+/** Size in bytes of the Mouse HID reporting IN endpoint. */
+#define MOUSE_EPSIZE              8
+
+extern USB_Descriptor_Device_t DeviceDescriptor_Mouse;
+extern USB_Descriptor_Configuration_Mouse_t ConfigurationDescriptor_Mouse;
+extern uint8_t LanguageString_Mouse[];
+extern uint8_t ManufacturerString_Mouse[];
+extern uint8_t ProductString_Mouse[];
+
+extern USB_Descriptor_HIDReport_Datatype_t MouseReport[];
+extern uint32_t		MouseReportSize;
 
 /**
  * @}
@@ -88,4 +79,4 @@ typedef struct {
 }
 #endif
 
-#endif /* __DESCRIPTORS_H_ */
+#endif /* __DESCRIPTORS_MOUSE_H_ */

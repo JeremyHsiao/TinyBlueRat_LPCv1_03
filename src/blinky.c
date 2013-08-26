@@ -31,6 +31,8 @@
 
 #include "board.h"
 #include <stdio.h>
+#include "LPC11U37_401.h"
+#include "Timer.h"
 
 /** @defgroup EXAMPLES_PERIPH_11XX_BLINKY LPC11xx Simple blinky example
  * @ingroup EXAMPLES_PERIPH_11XX
@@ -61,8 +63,8 @@
  * Private types/enumerations/variables
  ****************************************************************************/
 
-#define TICKRATE_HZ1 (10) /* 10 ticks per second */
-#define TICKRATE_HZ2 (11) /* 11 ticks per second */
+//#define TICKRATE_HZ1 (10) /* 10 ticks per second */
+//#define TICKRATE_HZ2 (11) /* 11 ticks per second */
 
 /*****************************************************************************
  * Public types/enumerations/variables
@@ -123,25 +125,20 @@ uint8_t show_message_off, show_message_on;
  */
 int main_blinky(void)
 {
-	uint32_t timerFreq;
-
-//	Board_Init();
-
-	/* Enable and setup SysTick Timer at a periodic rate */
-	//SysTick_Config(SystemCoreClock / TICKRATE_HZ1);
+	uint32_t	temp_tc, temp_mr3;
 
 	/* Enable timer 1 clock */
 	Chip_TIMER_Init(LPC_TIMER32_0);
-
-	/* Timer rate is system clock rate */
-	timerFreq = Chip_Clock_GetSystemClockRate();
+	Chip_TIMER_PrescaleSet(LPC_TIMER32_0, TIMER0_PRESCALER); // Prescaler set to 0
 
 	/* Timer setup for match and interrupt at TICKRATE_HZ */
 	Chip_TIMER_Reset(LPC_TIMER32_0);
-	Chip_TIMER_MatchEnableInt(LPC_TIMER32_0, 1);
-	//Chip_TIMER_SetMatch(LPC_TIMER32_0, 1, (timerFreq / TICKRATE_HZ2));
-	Chip_TIMER_SetMatch(LPC_TIMER32_0, 1, (timerFreq / 2));
-	Chip_TIMER_ResetOnMatchEnable(LPC_TIMER32_0, 1);
+	Chip_TIMER_MatchEnableInt(LPC_TIMER32_0, MATCH_3);
+	// Load Timer0_MATCH first match value (based on TC) and enable interrupt here
+	temp_tc = Chip_TIMER_ReadCount(LPC_TIMER32_0);
+	temp_mr3 = (500 * TIMER0_1mS_CNT) + temp_tc;
+	Chip_TIMER_SetMatch(LPC_TIMER32_0, MATCH_3, temp_mr3);
+	Chip_TIMER_ResetOnMatchDisable(LPC_TIMER32_0, MATCH_3);
 	Chip_TIMER_Enable(LPC_TIMER32_0);
 
 	/* Enable timer interrupt */

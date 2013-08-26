@@ -35,11 +35,12 @@
 #include "string.h"
 #include "i2c.h"
 #include "Uart.h"
-#include "VirtualSerial.h"
+#include "usb_common.h"
 #include "Timer.h"
 #include "adc.h"
 #include "ExtEEPROM.h"
 #include "InternalEEpromAPI.h"
+#include "VirtualSerial.h"
 
 /*****************************************************************************
  * Private types/enumerations/variables
@@ -70,7 +71,7 @@ static void SetupHardware(void)
 {
     SystemInit();
 	Board_Init();
-	VirtualSerial_Init();
+	MyUSB_Init();
 	UARTInit(115200);
 #ifdef _MY_UNIT_TEST_
 	main_blinky();
@@ -97,10 +98,10 @@ static void TestReadWriteExternalEEPROM(void)
 {
 	uint8_t	I2CRx[sizeof(MyUARTTestMessageL1)];
 
-	WriteEEPROM_OneByte(0x102,'0');
-	WriteEEPROM_MultiByte(0,MyUARTTestMessageL1,sizeof(MyUARTTestMessageL1)-1);
-	WriteEEPROM_OneByte(1,'Z');
-	ReadEEPROM(0, I2CRx, sizeof(MyUARTTestMessageL1)-1);
+	WriteExtEEPROM_OneByte(0x102,'0');
+	WriteExtEEPROM_MultiByte(0,MyUARTTestMessageL1,sizeof(MyUARTTestMessageL1)-1);
+	WriteExtEEPROM_OneByte(1,'Z');
+	ReadEExtEPROM(0, I2CRx, sizeof(MyUARTTestMessageL1)-1);
 }
 
 static void TestReadWriteInternalEEPROM(void)
@@ -188,7 +189,7 @@ int main(void)
 
 	for (;; ) {
 		EchoCharacter();				// Read and write back to Virtual Serial Port
-		VirtualSerial_USB_USBTask();
+		USB_task_in_main_loop();
 //		if(show_message_off==1)
 //		{
 //			UARTputstr("123\r\n");
@@ -202,9 +203,9 @@ int main(void)
 
 		TestIrRx();
 		TestUARTRxTx();
-		TestADC_CH0();
+		//TestADC_CH0();
 
-		VirtualSerial_FinishDataTyHost();
+		USB_task_in_main_loop();
 	}
 #else
 	app_main();

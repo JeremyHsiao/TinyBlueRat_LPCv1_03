@@ -37,7 +37,7 @@
 #include "USB.h"
 #include <string.h>
 #include <stdio.h>
-#include "Descriptors.h"
+#include "Descriptors_CDC.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -223,6 +223,12 @@ extern "C" {
 /**
  * @}
  */
+
+/* Ring buffer size */
+#define CDC_UART_RB_SIZE (256)
+extern RINGBUFF_T					cdc_txring;
+extern uint8_t						cdc_txbuff[CDC_UART_RB_SIZE];
+extern USB_ClassInfo_CDC_Device_t	*CDC_IF_PTR;
 
 #ifdef __cplusplus
 }

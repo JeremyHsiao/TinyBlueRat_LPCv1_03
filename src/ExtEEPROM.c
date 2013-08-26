@@ -17,7 +17,7 @@
 /*------------------------------------*/
 
 #define ONEBYTE_WRITE_BUF_SIZE	(2+1)
-void WriteEEPROM_OneByte ( uint16_t Address, uint8_t write_data )
+void WriteExtEEPROM_OneByte ( uint16_t Address, uint8_t write_data )
 {
 	uint8_t 			I2CBuffer[ONEBYTE_WRITE_BUF_SIZE];
 	int8_t				retry_cnt = I2C_RETRY_TIME;
@@ -43,7 +43,7 @@ void WriteEEPROM_OneByte ( uint16_t Address, uint8_t write_data )
 }
 
 #define PAGE_WRITE_BUF_SIZE		(M24C32_EPROM_PAGE_SIZE+2)
-void WriteEEPROM_32_64_Page_Write ( uint16_t Address, uint8_t *data_ptr, uint8_t data_length )
+void WriteExtEEPROM_32_64_Page_Write ( uint16_t Address, uint8_t *data_ptr, uint8_t data_length )
 {
 	uint8_t 			I2CBuffer[PAGE_WRITE_BUF_SIZE];
 	int8_t				retry_cnt = I2C_RETRY_TIME;
@@ -68,7 +68,7 @@ void WriteEEPROM_32_64_Page_Write ( uint16_t Address, uint8_t *data_ptr, uint8_t
 	}
 }
 
-void WriteEEPROM_MultiByte ( uint16_t Address, uint8_t *write_data, uint8_t MaxCounter )
+void WriteExtEEPROM_MultiByte ( uint16_t Address, uint8_t *write_data, uint8_t MaxCounter )
 {
 	uint16_t	Current_addr;
 	uint8_t		*data_ptr;
@@ -90,7 +90,7 @@ void WriteEEPROM_MultiByte ( uint16_t Address, uint8_t *write_data, uint8_t MaxC
 		{
 			temp = remaining_length;
 		}
-		WriteEEPROM_32_64_Page_Write( Current_addr, data_ptr , temp );
+		WriteExtEEPROM_32_64_Page_Write( Current_addr, data_ptr , temp );
 		data_ptr += temp;
 		Current_addr += temp;
 		remaining_length -= temp;
@@ -100,7 +100,7 @@ void WriteEEPROM_MultiByte ( uint16_t Address, uint8_t *write_data, uint8_t MaxC
 	while (remaining_length>=M24C32_EPROM_PAGE_SIZE)
 	{
 		temp = M24C32_EPROM_PAGE_SIZE;						// full-page
-		WriteEEPROM_32_64_Page_Write( Current_addr, data_ptr , temp );
+		WriteExtEEPROM_32_64_Page_Write( Current_addr, data_ptr , temp );
 		data_ptr += temp;
 		Current_addr += temp;
 		remaining_length -= temp;
@@ -110,7 +110,7 @@ void WriteEEPROM_MultiByte ( uint16_t Address, uint8_t *write_data, uint8_t MaxC
 	if (remaining_length> 0)
 	{
 		temp = remaining_length;
-		WriteEEPROM_32_64_Page_Write( Current_addr, data_ptr , temp );
+		WriteExtEEPROM_32_64_Page_Write( Current_addr, data_ptr , temp );
 //		data_ptr += temp;
 //		Current_addr += temp;
 //		remaining_length -= temp;
@@ -121,14 +121,14 @@ void WriteEEPROM_MultiByte ( uint16_t Address, uint8_t *write_data, uint8_t MaxC
     data_ptr = write_data;
 	for ( Counter=0; Counter<MaxCounter; Counter++)
 	{
-		WriteEEPROM_OneByte(Address,*data_ptr);
+		WriteExtEEPROM_OneByte(Address,*data_ptr);
 		Address++;
 		data_ptr++;
 	}
 #endif
 }
 
-void ReadEEPROM ( uint16_t Address, uint8_t *read_data, uint8_t Rcounter )
+void ReadExtEEPROM ( uint16_t Address, uint8_t *read_data, uint8_t Rcounter )
 {
 	uint8_t 			I2CBuffer[2];	// Write Address first (2byte)
 	int8_t				retry_cnt = I2C_RETRY_TIME;
@@ -154,15 +154,15 @@ void ReadEEPROM ( uint16_t Address, uint8_t *read_data, uint8_t Rcounter )
 }
 
 // Check if data is different before write
-void StoreEEPROM(uint16_t wAddr, uint8_t bData)
+void StoreExtEEPROM(uint16_t wAddr, uint8_t bData)
 {
 	uint8_t		temp_buffer[1];
 
-	ReadEEPROM(wAddr, temp_buffer, 1);
+	ReadExtEEPROM(wAddr, temp_buffer, 1);
 	if (temp_buffer[0] != bData)
     {
-		WriteEEPROM_OneByte(wAddr, bData);
-		ReadEEPROM(wAddr, temp_buffer, 1);
+		WriteExtEEPROM_OneByte(wAddr, bData);
+		ReadExtEEPROM(wAddr, temp_buffer, 1);
 		if (temp_buffer[0] != bData)
 		{
 			return;

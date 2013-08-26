@@ -32,16 +32,7 @@
  * this code.
  */
 
-#include "Descriptors.h"
-
-/* On some devices, there is a factory set internal serial number which can be automatically sent to the host as
- * the device's serial number when the Device Descriptor's .SerialNumStrIndex entry is set to USE_INTERNAL_SERIAL.
- * This allows the host to track a device across insertions on different ports, allowing them to retain allocated
- * resources like COM port numbers and drivers. On demos using this feature, give a warning on unsupported devices
- * so that the user can supply their own serial number descriptor instead or remove the USE_INTERNAL_SERIAL value
- * from the Device Descriptor (forcing the host to generate a serial number for each device from the VID, PID and
- * port location).
- */
+#include "Descriptors_comp_Mouse_CDC.h"
 
 /*****************************************************************************
  * Private types/enumerations/variables
@@ -51,28 +42,48 @@
  * Public types/enumerations/variables
  ****************************************************************************/
 
+/** HID class report descriptor. This is a special descriptor constructed with values from the
+ *  USBIF HID class specification to describe the reports and capabilities of the HID device. This
+ *  descriptor is parsed by the host and its contents used to determine what data (and in what encoding)
+ *  the device will send, and what it may be sent back from the host. Refer to the HID specification for
+ *  more details on HID report descriptors.
+ */
+USB_Descriptor_HIDReport_Datatype_t MouseReport_comp_Mouse_CDC[] = {
+		/* Use the HID class driver's standard Mouse report.
+		 *   Min X/Y Axis values: -1
+		 *   Max X/Y Axis values:  1
+		 *   Min physical X/Y Axis values (used to determine resolution): -1
+		 *   Max physical X/Y Axis values (used to determine resolution):  1
+		 *   Buttons: 3
+		 *   Absolute screen coordinates: false
+		 */
+		HID_DESCRIPTOR_MOUSE(-1, 1, -1, 1, 3, false)
+};
+
+uint32_t	GenericReport_comp_Mouse_CDCSize = sizeof(MouseReport_comp_Mouse_CDC);
+
 /** Device descriptor structure. This descriptor, located in FLASH memory, describes the overall
  *  device characteristics, including the supported USB version, control endpoint size and the
  *  number of device configurations. The descriptor is read out by the USB host when the enumeration
  *  process begins.
  */
-USB_Descriptor_Device_t DeviceDescriptor = {
+USB_Descriptor_Device_t DeviceDescriptor_comp_Mouse_CDC = {
 	.Header                 = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
 
 	.USBSpecification       = VERSION_BCD(01.10),
-	.Class                  = CDC_CSCP_CDCClass,
-	.SubClass               = CDC_CSCP_NoSpecificSubclass,
-	.Protocol               = CDC_CSCP_NoSpecificProtocol,
+	.Class                  = USB_CSCP_IADDeviceClass,
+	.SubClass               = USB_CSCP_IADDeviceSubclass,
+	.Protocol               = USB_CSCP_IADDeviceProtocol,
 
 	.Endpoint0Size          = FIXED_CONTROL_ENDPOINT_SIZE,
 
 	.VendorID               = 0x1fc9,	/* NXP */
-	.ProductID              = 0x2047,
+	.ProductID              = 0x2060,
 	.ReleaseNumber          = VERSION_BCD(00.01),
 
 	.ManufacturerStrIndex   = 0x01,
 	.ProductStrIndex        = 0x02,
-	.SerialNumStrIndex      = USE_INTERNAL_SERIAL,
+	.SerialNumStrIndex      = 0x03,
 
 	.NumberOfConfigurations = FIXED_NUM_CONFIGURATIONS
 };
@@ -82,12 +93,12 @@ USB_Descriptor_Device_t DeviceDescriptor = {
  *  and endpoints. The descriptor is read out by the USB host during the enumeration process when selecting
  *  a configuration so that the host may correctly communicate with the USB device.
  */
-USB_Descriptor_Configuration_t ConfigurationDescriptor = {
+USB_Descriptor_Configuration_comp_Mouse_CDC_t ConfigurationDescriptor_comp_Mouse_CDC = {
 	.Config = {
 		.Header                 = {.Size = sizeof(USB_Descriptor_Configuration_Header_t), .Type = DTYPE_Configuration},
 
-		.TotalConfigurationSize = sizeof(USB_Descriptor_Configuration_t) - 1,		// termination byte not included in size
-		.TotalInterfaces        = 2,
+		.TotalConfigurationSize = sizeof(USB_Descriptor_Configuration_comp_Mouse_CDC_t) - 1,		// termination byte not included in size
+		.TotalInterfaces        = (1+2),
 
 		.ConfigurationNumber    = 1,
 		.ConfigurationStrIndex  = NO_DESCRIPTOR,
@@ -97,10 +108,94 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
 		.MaxPowerConsumption    = USB_CONFIG_POWER_MA(100)
 	},
 
+	.HID_Interface = {
+		.Header                 = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
+
+		.InterfaceNumber        = COMP_MOUSE_CDC_HID_INTERFACE_NO,
+		.AlternateSetting       = 0x00,
+
+		.TotalEndpoints         = 1,
+
+		.Class                  = HID_CSCP_HIDClass,
+		.SubClass               = HID_CSCP_BootSubclass,
+		.Protocol               = HID_CSCP_MouseBootProtocol,
+
+		.InterfaceStrIndex      = NO_DESCRIPTOR
+	},
+
+	.HID_MouseHID = {
+		.Header                 = {.Size = sizeof(USB_HID_Descriptor_HID_t), .Type = HID_DTYPE_HID},
+
+		.HIDSpec                = VERSION_BCD(01.11),
+		.CountryCode            = 0x00,
+		.TotalReportDescriptors = 1,
+		.HIDReportType          = HID_DTYPE_Report,
+		.HIDReportLength        = sizeof(MouseReport_comp_Mouse_CDC)
+	},
+
+	.HID_ReportINEndpoint = {
+		.Header                 = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
+
+		// Begin
+		// .EndpointAddress        = (ENDPOINT_DESCRIPTOR_DIR_IN | MOUSE_EPNUM),
+		.EndpointAddress        = (ENDPOINT_DIR_IN | COMP_MOUSE_CDC_MOUSE_EPNUM),
+		// End
+		.Attributes             = (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+		.EndpointSize           = COMP_MOUSE_CDC_MOUSE_EPSIZE,
+		.PollingIntervalMS      = 0x01
+	},
+
+// Begin of HID Vendor Specific
+//	.HID_Vendor_Interface = {
+//		.Header                 = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
+//
+//		.InterfaceNumber        = 0x00,
+//		.AlternateSetting       = 0x00,
+//
+//		.TotalEndpoints         = 1,
+//
+//		.Class                  = HID_CSCP_HIDClass,
+//		.SubClass               = HID_CSCP_NonBootSubclass,
+//		.Protocol               = HID_CSCP_NonBootProtocol,
+//
+//		.InterfaceStrIndex      = NO_DESCRIPTOR
+//	},
+//
+//	.HID_GenericHID = {
+//		.Header                 = {.Size = sizeof(USB_HID_Descriptor_HID_t), .Type = HID_DTYPE_HID},
+//
+//		.HIDSpec                = VERSION_BCD(01.11),
+//		.CountryCode            = 0x00,
+//		.TotalReportDescriptors = 1,
+//		.HIDReportType          = HID_DTYPE_Report,
+//		.HIDReportLength        = sizeof(GenericReport)
+//	},
+//
+//	.HID_VendorReportINEndpoint = {
+//		.Header                 = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
+//
+//		.EndpointAddress        = (ENDPOINT_DIR_IN | GENERIC_IN_EPNUM),
+//		.Attributes             = (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+//		.EndpointSize           = GENERIC_EPSIZE,
+//		.PollingIntervalMS      = 0x01
+//	},
+// End of HID Vendor Specific
+
+	.IAD_Interface = {
+		.Header                 = {.Size = sizeof(USB_Descriptor_Interface_Association_t), .Type = DTYPE_InterfaceAssociation},
+
+		.FirstInterfaceIndex    = COMP_MOUSE_CDC_CDC_FUNCTION_INTERFACE_NO,
+		.TotalInterfaces        = 0x02,
+		.Class                  = CDC_CSCP_CDCClass,
+		.SubClass               = CDC_CSCP_ACMSubclass,
+		.Protocol               = CDC_CSCP_NoSpecificProtocol,
+		.IADStrIndex      	    = NO_DESCRIPTOR
+	},
+
 	.CDC_CCI_Interface = {
 		.Header                 = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
 
-		.InterfaceNumber        = 0,
+		.InterfaceNumber        = COMP_MOUSE_CDC_CDC_FUNCTION_INTERFACE_NO,
 		.AlternateSetting       = 0,
 
 		.TotalEndpoints         = 1,
@@ -130,24 +225,24 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
 		.Header                 = {.Size = sizeof(USB_CDC_Descriptor_FunctionalUnion_t), .Type = DTYPE_CSInterface},
 		.Subtype                = CDC_DSUBTYPE_CSInterface_Union,
 
-		.MasterInterfaceNumber  = 0,
-		.SlaveInterfaceNumber   = 1,
+		.MasterInterfaceNumber  = COMP_MOUSE_CDC_CDC_FUNCTION_INTERFACE_NO,
+		.SlaveInterfaceNumber   = COMP_MOUSE_CDC_CDC_DATA_INTERFACE_NO,
 	},
 
 	.CDC_NotificationEndpoint = {
 		.Header                 = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
 
 		//			.EndpointAddress        = (ENDPOINT_DESCRIPTOR_DIR_IN | CDC_NOTIFICATION_EPNUM),
-		.EndpointAddress        = (ENDPOINT_DIR_IN | CDC_NOTIFICATION_EPNUM),
+		.EndpointAddress        = (ENDPOINT_DIR_IN | COMP_MOUSE_CDC_CDC_NOTIFICATION_EPNUM),
 		.Attributes             = (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-		.EndpointSize           = CDC_NOTIFICATION_EPSIZE,
-		.PollingIntervalMS      = 0xFF
+		.EndpointSize           = COMP_MOUSE_CDC_CDC_NOTIFICATION_EPSIZE,
+		.PollingIntervalMS      = 0x10
 	},
 
 	.CDC_DCI_Interface = {
 		.Header                 = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
 
-		.InterfaceNumber        = 1,
+		.InterfaceNumber        = COMP_MOUSE_CDC_CDC_DATA_INTERFACE_NO,
 		.AlternateSetting       = 0,
 
 		.TotalEndpoints         = 2,
@@ -163,9 +258,9 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
 		.Header                 = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
 
 		//			.EndpointAddress        = (ENDPOINT_DESCRIPTOR_DIR_OUT | CDC_RX_EPNUM),
-		.EndpointAddress        = (ENDPOINT_DIR_OUT | CDC_RX_EPNUM),
+		.EndpointAddress        = (ENDPOINT_DIR_OUT | COMP_MOUSE_CDC_CDC_RX_EPNUM),
 		.Attributes             = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-		.EndpointSize           = CDC_TXRX_EPSIZE,
+		.EndpointSize           = COMP_MOUSE_CDC_CDC_TXRX_EPSIZE,
 		.PollingIntervalMS      = 0x01
 	},
 
@@ -173,65 +268,93 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
 		.Header                 = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
 
 		//			.EndpointAddress        = (ENDPOINT_DESCRIPTOR_DIR_IN | CDC_TX_EPNUM),
-		.EndpointAddress        = (ENDPOINT_DIR_IN | CDC_TX_EPNUM),
+		.EndpointAddress        = (ENDPOINT_DIR_IN | COMP_MOUSE_CDC_CDC_TX_EPNUM),
 		.Attributes             = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-		.EndpointSize           = CDC_TXRX_EPSIZE,
+		.EndpointSize           = COMP_MOUSE_CDC_CDC_TXRX_EPSIZE,
 		.PollingIntervalMS      = 0x01
 	},
-	.CDC_Termination = 0x00
+
+	.HID_Termination = 0x00
 };
 
 /** Language descriptor structure. This descriptor, located in FLASH memory, is returned when the host requests
  *  the string descriptor with index 0 (the first index). It is actually an array of 16-bit integers, which indicate
  *  via the language ID table available at USB.org what languages the device supports for its string descriptors.
  */
-uint8_t LanguageString[] = {
+uint8_t LanguageString_comp_Mouse_CDC[] = {
 	USB_STRING_LEN(1),
 	DTYPE_String,
 	WBVAL(LANGUAGE_ID_ENG),
 };
-USB_Descriptor_String_t *LanguageStringPtr = (USB_Descriptor_String_t *) LanguageString;
 
 /** Manufacturer descriptor string. This is a Unicode string containing the manufacturer's details in human readable
  *  form, and is read out upon request by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-uint8_t ManufacturerString[] = {
+uint8_t ManufacturerString_comp_Mouse_CDC[] = {
 	USB_STRING_LEN(3),
 	DTYPE_String,
 	WBVAL('N'),
 	WBVAL('X'),
 	WBVAL('P'),
 };
-USB_Descriptor_String_t *ManufacturerStringPtr = (USB_Descriptor_String_t *) ManufacturerString;
 
 /** Product descriptor string. This is a Unicode string containing the product's details in human readable form,
  *  and is read out upon request by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-uint8_t ProductString[] = {
-	USB_STRING_LEN(18),
+uint8_t ProductString_comp_Mouse_CDC[] = {
+	USB_STRING_LEN(20),
 	DTYPE_String,
-	WBVAL('L'),
+	WBVAL('T'),
 	WBVAL('P'),
+	WBVAL('V'),
+	WBVAL('A'),
+	WBVAL('O'),
 	WBVAL('C'),
+	WBVAL(' '),
+	WBVAL('M'),
+	WBVAL('y'),
+	WBVAL('O'),
+	WBVAL('w'),
+	WBVAL('n'),
 	WBVAL('U'),
 	WBVAL('S'),
 	WBVAL('B'),
-	WBVAL('l'),
-	WBVAL('i'),
-	WBVAL('b'),
-	WBVAL(' '),
-	WBVAL('C'),
-	WBVAL('D'),
-	WBVAL('C'),
 	WBVAL(' '),
 	WBVAL('D'),
 	WBVAL('e'),
 	WBVAL('m'),
 	WBVAL('o'),
 };
-USB_Descriptor_String_t *ProductStringPtr = (USB_Descriptor_String_t *) ProductString;
+
+//
+// Serial Number String
+//
+uint8_t SerialNumberString_comp_Mouse_CDC[] = {
+	USB_STRING_LEN(20),
+	DTYPE_String,
+	WBVAL('S'),
+	WBVAL('N'),
+	WBVAL('1'),
+	WBVAL('2'),
+	WBVAL('3'),
+	WBVAL('4'),
+	WBVAL('5'),
+	WBVAL('6'),
+	WBVAL('7'),
+	WBVAL('8'),
+	WBVAL('9'),
+	WBVAL('0'),
+	WBVAL('A'),
+	WBVAL('B'),
+	WBVAL('C'),
+	WBVAL('E'),
+	WBVAL('F'),
+	WBVAL('Z'),
+	WBVAL('Y'),
+	WBVAL('X'),
+};
 
 /*****************************************************************************
  * Private functions
@@ -241,55 +364,3 @@ USB_Descriptor_String_t *ProductStringPtr = (USB_Descriptor_String_t *) ProductS
  * Public functions
  ****************************************************************************/
 
-/** This function is called by the library when in device mode, and must be overridden (see library "USB Descriptors"
- *  documentation) by the application code so that the address and size of a requested descriptor can be given
- *  to the USB library. When the device receives a Get Descriptor request on the control endpoint, this function
- *  is called so that the descriptor details can be passed back and the appropriate descriptor sent back to the
- *  USB host.
- */
-uint16_t CALLBACK_USB_GetDescriptor(uint8_t corenum,
-									const uint16_t wValue,
-									const uint8_t wIndex,
-									const void * *const DescriptorAddress)
-{
-	const uint8_t  DescriptorType   = (wValue >> 8);
-	const uint8_t  DescriptorNumber = (wValue & 0xFF);
-
-	const void *Address = NULL;
-	uint16_t    Size    = NO_DESCRIPTOR;
-
-	switch (DescriptorType) {
-	case DTYPE_Device:
-		Address = &DeviceDescriptor;
-		Size    = sizeof(USB_Descriptor_Device_t);
-		break;
-
-	case DTYPE_Configuration:
-		Address = &ConfigurationDescriptor;
-		Size    = sizeof(USB_Descriptor_Configuration_t);
-		break;
-
-	case DTYPE_String:
-		switch (DescriptorNumber) {
-		case 0x00:
-			Address = LanguageStringPtr;
-			Size    = pgm_read_byte(&LanguageStringPtr->Header.Size);
-			break;
-
-		case 0x01:
-			Address = ManufacturerStringPtr;
-			Size    = pgm_read_byte(&ManufacturerStringPtr->Header.Size);
-			break;
-
-		case 0x02:
-			Address = ProductStringPtr;
-			Size    = pgm_read_byte(&ProductStringPtr->Header.Size);
-			break;
-		}
-
-		break;
-	}
-
-	*DescriptorAddress = Address;
-	return Size;
-}

@@ -90,6 +90,26 @@ void readInternalEEPROM( uint32_t eeAddress, uint8_t* buffAddress, uint32_t byte
 	}
 	return;
 }
+
+// Check if data is different before write
+void StoreIntEEPROM(uint32_t wAddr, uint8_t bData)
+{
+	uint8_t		temp_buffer[1], temp_data[1];
+
+	temp_data[0] = bData;
+	readInternalEEPROM( wAddr, temp_buffer, 1 );
+	if (temp_buffer[0] != temp_data[0])
+    {
+		writeInternalEEPROM( wAddr, temp_data, 1 );
+		readInternalEEPROM( wAddr, temp_buffer, 1 );
+		if (temp_buffer[0] != temp_data[0])
+		{
+			return;
+			// trip error here.
+		}
+    }
+}
+
 /******************************************************************************
 **                            End Of File
 ******************************************************************************/

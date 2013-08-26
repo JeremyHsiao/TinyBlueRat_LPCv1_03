@@ -17,14 +17,14 @@
  * warranty that such application will be suitable for the specified
  * use without further testing or modification.
 ****************************************************************************/
-#ifndef __EEPROM_H 
-#define __EEPROM_H
+#ifndef __INTERNALEEPROMAPI_H
+#define __INTERNALEEPROMAPI_H
 
-#define EEPROM_PROFILE 1
-void writeInternalEEPROM( uint32_t eeAddress, uint8_t* buffAddress, uint32_t byteCount );
-void readInternalEEPROM( uint32_t eeAddress, uint8_t* buffAddress, uint32_t byteCount );
+extern void writeInternalEEPROM( uint32_t eeAddress, uint8_t* buffAddress, uint32_t byteCount );
+extern void readInternalEEPROM( uint32_t eeAddress, uint8_t* buffAddress, uint32_t byteCount );
+extern void StoreIntEEPROM(uint32_t wAddr, uint8_t bData);
 
-#endif /* end __EEPROM_H */
+#endif /* end __INTERNALEEPROMAPI_H */
 /*****************************************************************************
 **                            End Of File
 ******************************************************************************/
