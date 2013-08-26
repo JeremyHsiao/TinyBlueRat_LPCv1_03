@@ -213,3 +213,9 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+#SVN
+.svn/
+
+#MyOwnAPP is isolated from GitHub
+src_app/
