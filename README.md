@@ -1,5 +1,5 @@
-TinyBlueRat
-===========
+TinyBlueRat_LPCv1_03
+====================
 
 This repository gathered all LPCOpen Platform v1.03 code for NXP LPC11U37/401 MCU under one directory.
 It is the base for further development.
