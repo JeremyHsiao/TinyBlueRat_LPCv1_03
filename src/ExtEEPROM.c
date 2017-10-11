@@ -8,10 +8,25 @@
 
 #include "chip.h"
 #include "board.h"
+#include "gpio.h"
 #include "string.h"
 #include "i2c.h"
 #include "Timer.h"
 #include "ExtEEPROM.h"
+
+//#define SHOW_DEBUG_MSG_EXTEEPROM_C
+#ifdef SHOW_DEBUG_MSG_EXTEEPROM_C
+// Common
+//#include "Define.h"
+// Internal
+#define  GLOBAL
+#undef GLOBAL
+// External
+#define  GLOBAL extern
+#include "app_Uart.h"
+#undef GLOBAL
+#endif // SHOW_DEBUG_MSG_EXTEEPROM_C
+
 /*------------------------------------*/
 /* Local data or definition 		  */
 /*------------------------------------*/
@@ -139,15 +154,32 @@ void ReadExtEEPROM ( uint16_t Address, uint8_t *read_data, uint8_t Rcounter )
 
 	ret = Chip_I2C_MasterCmd2ByteRead(I2C_INTERFACE_ID, (M24C32_EPROM_SLAVE_ADDR>>1), I2CBuffer, read_data, Rcounter);
 
-	while ((ret>0)&&(retry_cnt>0))
+	//
+	// If none or only part of data read, retry unread part of data
+	//
+	while ((ret<Rcounter)&&(retry_cnt>0))
 	{
 		Delayus(I2C_RETRY_WAIT_MS*1000);
+		if(ret>0)
+		{
+			Address+=ret;
+			read_data+=ret;
+			Rcounter-=ret;
+			I2CBuffer[0] = (uint8_t)(Address >> 8);
+			I2CBuffer[1] = (uint8_t) Address;
+		}
 		ret = Chip_I2C_MasterCmd2ByteRead(I2C_INTERFACE_ID, (M24C32_EPROM_SLAVE_ADDR>>1), I2CBuffer, read_data, Rcounter);
 		retry_cnt--;
 	}
 
-	if (ret>0)
+	if (ret!=Rcounter)
 	{
+#ifdef SHOW_DEBUG_MSG_EXTEEPROM_C
+		UARTputHEX_U((Address>>8)&0xff);
+		UARTputHEX_U(Address&0xff);
+		UARTputchar('\r');
+		UARTputchar('\n');
+#endif // SHOW_DEBUG_MSG_EXTEEPROM_C
 		return;
 		// trip error here.
 	}

@@ -36,26 +36,26 @@ extern void IR_RX_TIMER32_0_CAP0_IRQHandler(void);
 extern void IR_TX_TIMER32_0_MATCH0_IRQHandler(void);
 #endif // _MY_UNIT_TEST_
 
-volatile uint32_t		LastCaptureTime_IR;
-volatile uint32_t		LastCaptureTime_CEC;
-volatile uint32_t		LastCaptureTime_HSync;
-volatile uint32_t		PWM_period =  (uint32_t) (PCLK_FREQUENCY/(38000));		// For 38KHz PWM pulse
-volatile uint32_t		PWM_duty_cycle = 50;
-volatile uint8_t 		SW_Timer_Timeout;
-volatile uint32_t 		SystemTimer;
+volatile 	uint32_t		LastCaptureTime_IR;
+volatile 	uint32_t		LastCaptureTime_CEC;
+volatile 	uint32_t		LastCaptureTime_HSync;
+volatile 	uint32_t		PWM_period =  (uint32_t) (PCLK_FREQUENCY/(38000));		// For 38KHz PWM pulse
+volatile 	uint32_t		PWM_duty_cycle = 50;
+			Bool	 		SW_Timer_Timeout = FALSE;
+volatile 	uint32_t 		SystemTimer;
 
-inline void SW_Delay_Timeout_IRQHandler(void)
+void SW_Delay_Timeout_IRQHandler(void)
 {
-	SW_Timer_Timeout = 1;
+	SW_Timer_Timeout = TRUE;
 }
 
-inline void SW_System_Timer_IRQHandler(void)
+void SW_System_Timer_IRQHandler(void)
 {
 	SystemTimer++;
 	Chip_TIMER_AddMatch(LPC_TIMER32_0, MATCH_2, ( 1 * TIMER0_1mS_CNT));
 }
 
-inline void BLINKY_LED_MATCH_IRQHandler(void)
+void BLINKY_LED_MATCH_IRQHandler(void)
 {
 	const char *Str_Off = "01234\r\n";
 	const char *Str_On  = "98765\r\n";
@@ -105,6 +105,7 @@ void TIMER32_0_IRQHandler(void)
 	if (Chip_TIMER_MatchPending(LPC_TIMER32_0, MATCH_1))
 	{
 		SW_Delay_Timeout_IRQHandler();						// For Delayus()
+		//Chip_TIMER_MatchDisableInt(LPC_TIMER32_0, MATCH_1);	/* Disable Interrupt on MR1 */
 		Chip_TIMER_ClearMatch(LPC_TIMER32_0, MATCH_1);
 	}
 
@@ -266,8 +267,8 @@ void Timer_Init(void)
 	// Interrupt on CT32Bn_CAP0 event: a CR0 load due to a CT32Bn_CAP0 event will generate an interrupt.
 	// Capture on CT32Bn_CAP0 rising edge: a sequence of 0 then 1 on CT32Bn_CAP0 will cause CR0 to be loaded with the contents of TC.
 	// P1_28 falling edge, CR0 loaded with TC, and interrupt generated
-	Chip_TIMER_CaptureRisingEdgeEnable(LPC_TIMER32_0,CAPTURE_0);
-	Chip_TIMER_CaptureFallingEdgeEnable(LPC_TIMER32_0,CAPTURE_0);
+	Chip_TIMER_CaptureRisingEdgeEnable(LPC_TIMER32_0,CAPTURE_0);	// NEC requires only rising edge
+	Chip_TIMER_CaptureFallingEdgeEnable(LPC_TIMER32_0,CAPTURE_0);	// RC 6 requires both edges; for 8051 simulation, enabling only falling edge.
 	Chip_TIMER_CaptureEnableInt(LPC_TIMER32_0,CAPTURE_0);
 	LastCaptureTime_IR = Chip_TIMER_ReadCount(LPC_TIMER32_0);
 
@@ -304,9 +305,15 @@ void Timer_Init(void)
 	/* Setup the external match register */
 	// Adopt from previous code
 	Chip_TIMER_ExtMatchControlSet(LPC_TIMER32_1, 1, TIMER_EXTMATCH_CLEAR, MATCH_0);
+#ifdef _LPC_OPEN_1_03_
 	Chip_TIMER_ExtMatchControlSetWithOR(LPC_TIMER32_1, 1, TIMER_EXTMATCH_CLEAR, MATCH_3);   // Use from 2nd ExtMatchCTRL with Chip_TIMER_ExtMatchControlSetWithOR()
 	Chip_TIMER_ExtMatchControlSetWithOR(LPC_TIMER32_1, 0, TIMER_EXTMATCH_SET,   MATCH_1);   // Use from 2nd ExtMatchCTRL with Chip_TIMER_ExtMatchControlSetWithOR()
 	Chip_TIMER_ExtMatchControlSetWithOR(LPC_TIMER32_1, 0, TIMER_EXTMATCH_CLEAR, MATCH_2);   // Use from 2nd ExtMatchCTRL with Chip_TIMER_ExtMatchControlSetWithOR()
+#else
+	Chip_TIMER_ExtMatchControlSet(LPC_TIMER32_1, 1, TIMER_EXTMATCH_CLEAR, MATCH_3);   // Use from 2nd ExtMatchCTRL with Chip_TIMER_ExtMatchControlSetWithOR()
+	Chip_TIMER_ExtMatchControlSet(LPC_TIMER32_1, 0, TIMER_EXTMATCH_SET,   MATCH_1);   // Use from 2nd ExtMatchCTRL with Chip_TIMER_ExtMatchControlSetWithOR()
+	Chip_TIMER_ExtMatchControlSet(LPC_TIMER32_1, 0, TIMER_EXTMATCH_CLEAR, MATCH_2);   // Use from 2nd ExtMatchCTRL with Chip_TIMER_ExtMatchControlSetWithOR()
+#endif // _LPC_OPEN_1_03_
 
 	// Match0 from high-to-low for PWM output pin
 	Chip_TIMER_SetMatch(LPC_TIMER32_1,MATCH_0,~(0x1));	// always low as default
@@ -318,8 +325,13 @@ void Timer_Init(void)
 	Chip_TIMER_ResetOnMatchEnable(LPC_TIMER32_1,MATCH_3);
 
 	/* Enable the selected PWMs and enable Match3 */
+#ifdef _LPC_OPEN_1_03_
 	IP_TIMER_SetPWMMatchMode(LPC_TIMER32_1, MATCH_PWM_MODE_ENABLE, MATCH_0);
 	IP_TIMER_SetPWMMatchModeWithOR(LPC_TIMER32_1, MATCH_PWM_MODE_ENABLE, MATCH_3);
+#else
+	Chip_TIMER_SetPWMMatchModeEnable(LPC_TIMER32_1, MATCH_0);
+	Chip_TIMER_SetPWMMatchModeEnable(LPC_TIMER32_1, MATCH_3);
+#endif // #ifdef _LPC_OPEN_1_03_
 
 	Chip_TIMER_Enable(LPC_TIMER32_1);
 
@@ -390,11 +402,38 @@ void Delayus(uint32_t delay_us_value)
     Chip_TIMER_MatchEnableInt(LPC_TIMER32_0, 1);			/* Interrupt on MR1 */
     // Interrupt on MR1: an interrupt is generated when MR1 matches the value in the TC.
 
-    SW_Timer_Timeout = 0;
-    while (SW_Timer_Timeout==0) { }
+    SW_Timer_Timeout = FALSE;
+    while (SW_Timer_Timeout==FALSE) { }
     Chip_TIMER_MatchDisableInt(LPC_TIMER32_0, MATCH_1);	/* Disable Interrupt on MR1 */
 }
 
-/******************************************************************************
-/**                            End Of File
-/******************************************************************************/
+
+void SetMyTimer_us(uint32_t delay_us_value)
+{
+	uint32_t wCount, wTc;
+
+    wTc = Chip_TIMER_ReadCount(LPC_TIMER32_0);
+    wCount = wTc + (delay_us_value * TIMER0_1uS_CNT) + 1;    // Take 1 extra count value as delay calibration value.
+
+    Chip_TIMER_SetMatch(LPC_TIMER32_0, MATCH_1, wCount);	// Timer32_0 match 1
+    // 31:0 MATCH Timer counter match value.
+    Chip_TIMER_MatchEnableInt(LPC_TIMER32_0, 1);			/* Interrupt on MR1 */
+    // Interrupt on MR1: an interrupt is generated when MR1 matches the value in the TC.
+
+    SW_Timer_Timeout = FALSE;
+}
+
+Bool CheckMyTimer_us_TimeOut(void)
+{
+	return SW_Timer_Timeout;
+}
+
+void ClearMyTimer_us()
+{
+	SW_Timer_Timeout = FALSE;
+	Chip_TIMER_MatchDisableInt(LPC_TIMER32_0, MATCH_1);	/* Disable Interrupt on MR1 */
+}
+
+//******************************************************************************
+//                            End Of File
+//******************************************************************************

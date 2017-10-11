@@ -56,12 +56,16 @@
 extern volatile uint32_t		LastCaptureTime_IR;
 extern volatile uint32_t		LastCaptureTime_CEC;
 extern volatile uint32_t		LastCaptureTime_HSync;
-extern volatile uint32_t		PWM_period;
-extern volatile uint32_t		PWM_duty_cycle;
-extern volatile uint8_t 		SW_Timer_Timeout;
+extern volatile	uint32_t		PWM_period;
+extern volatile	uint32_t		PWM_duty_cycle;
+extern          Bool 			SW_Timer_Timeout;
 extern volatile uint32_t 		SystemTimer;
 extern void Timer_Init(void);
 extern void Delayus(uint32_t delay_us_value);
+extern void SetMyTimer_us(uint32_t delay_us_value);
+extern Bool CheckMyTimer_us_TimeOut(void);
+extern void ClearMyTimer_us();
+
 //
 //
 //

@@ -73,6 +73,7 @@ USB_ClassInfo_HID_Device_t     	*HID_Mouse_PTR;
 /*****************************************************************************
  * Private functions
  ****************************************************************************/
+
 void MyBoard_Buttons_Init(void)
 {
 	Chip_GPIO_WriteDirBit(LPC_GPIO_PORT, MY_BUTTONS_BUTTON1_GPIO_PORT_NUM, MY_BUTTONS_BUTTON1_GPIO_BIT_NUM, false);
@@ -122,7 +123,63 @@ uint8_t MyJoystick_GetStatus(void)
 	return ret;
 }
 
+//#define USE_MY_INPUT_SYSTEM
+#ifdef USE_MY_INPUT_SYSTEM
+#include "input.h"
+/* HID class driver callback function for the creation of HID reports to the host */
+bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
+										 uint8_t *const ReportID,
+										 const uint8_t ReportType,
+										 void *ReportData,
+										 uint16_t *const ReportSize)
+{
+	USB_MouseReport_Data_t *MouseReport = (USB_MouseReport_Data_t *) ReportData;
+	bool press = false;
+	int8_t	temp_x, temp_y;
 
+	*ReportSize = sizeof(USB_MouseReport_Data_t);
+
+	// 8-bit
+	temp_x = My_input_event_value(REL_X);
+	if(temp_x>=127)
+	{
+		temp_x = 127;
+	}
+	else if(temp_x<=-127)
+	{
+		temp_x = -127;
+	}
+
+	// 8-bit
+	temp_y = My_input_event_value(REL_Y);
+	if(temp_y>=127)
+	{
+		temp_y = 127;
+	}
+	else if(temp_y<=-127)
+	{
+		temp_y = -127;
+	}
+
+	MouseReport->X = temp_x;
+	MouseReport->Y = temp_y;
+
+	if(My_input_event_value(BTN_LEFT))
+	{
+		MouseReport->Button |= (1 << 0);
+		press = true;
+	}
+
+	if(My_input_event_value(BTN_RIGHT))
+	{
+		MouseReport->Button |= (1 << 1);
+		press = true;
+	}
+
+	return press;
+}
+
+#else
 
 /* HID class driver callback function for the creation of HID reports to the host */
 bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
@@ -168,6 +225,9 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t *const HIDIn
 	*ReportSize = sizeof(USB_MouseReport_Data_t);
 	return press;
 }
+
+#endif // #ifdef USE_MY_INPUT_SYSTEM
+
 
 /* HID class driver callback function for the processing of HID reports from the host */
 void CALLBACK_HID_Device_ProcessHIDReport(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,

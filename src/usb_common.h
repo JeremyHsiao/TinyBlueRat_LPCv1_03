@@ -49,6 +49,6 @@ extern USB_Descriptor_String_t 				*ProductStringPtr;
 #endif // _USB_COMMON_C
 
 extern void MyUSB_Init(void);
-extern inline void USB_task_in_main_loop(void);
+extern void USB_task_in_main_loop(void);
 
 #endif /* USB_COMMON_H_ */

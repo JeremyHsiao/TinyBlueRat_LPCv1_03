@@ -19,10 +19,20 @@
 #include "usb_common.h"
 #undef _USB_COMMON_C
 
-inline void USB_DEBUG_MSG(uint8_t *sent_data)
-{
-	WriteMultiByteToUARTRingBuffer(sent_data,strlen(sent_data));
-}
+//#define SHOW_DEBUG_MSG_USB_COMMON_C
+#ifdef SHOW_DEBUG_MSG_USB_COMMON_C
+// Common
+#include "Define.h"
+// Internal
+#define  GLOBAL
+#undef GLOBAL
+// External
+#define  GLOBAL extern
+#include "app_Uart.h"
+#undef GLOBAL
+#else
+#define USB_DEBUG_MSG(x)
+#endif // SHOW_DEBUG_MSG_USB_COMMON_C
 
 //
 // Common Functions

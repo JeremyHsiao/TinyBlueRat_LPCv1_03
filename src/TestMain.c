@@ -101,7 +101,7 @@ static void TestReadWriteExternalEEPROM(void)
 	WriteExtEEPROM_OneByte(0x102,'0');
 	WriteExtEEPROM_MultiByte(0,MyUARTTestMessageL1,sizeof(MyUARTTestMessageL1)-1);
 	WriteExtEEPROM_OneByte(1,'Z');
-	ReadEExtEPROM(0, I2CRx, sizeof(MyUARTTestMessageL1)-1);
+	ReadExtEEPROM(0, I2CRx, sizeof(MyUARTTestMessageL1)-1);
 }
 
 static void TestReadWriteInternalEEPROM(void)
