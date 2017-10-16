@@ -26,12 +26,6 @@
 #include "Io.h"
 #include "LPC11U37_401.h"
 
-#ifdef _MY_UNIT_TEST_
-extern void IrDA_Int_Handler(void) {}
-#else
-extern void IrDA_Int_Handler(void);
-#endif // _MY_UNIT_TEST_
-
 uint32_t	interrput_rising_edge_cnt = 0, interrput_falling_edge_cnt = 0, interrput_level_cnt = 0;
 
 void FLEX_INT0_IRQHandler(void)
@@ -51,8 +45,6 @@ void FLEX_INT0_IRQHandler(void)
 		else if (IP_GPIOPININT_CheckFallingEdgeIntEnable(LPC_GPIO_PIN_INT, PORT_NO) && IP_GPIOPININT_GetFallingEdgeDetect(LPC_GPIO_PIN_INT,PORT_NO) )
 		{
 			// Falling edge interrupt
-			IrDA_Int_Handler();
-			IP_GPIOPININT_ClearFallingEdgeDetect(LPC_GPIO_PIN_INT, PORT_NO);
 			interrput_falling_edge_cnt++;
 			Chip_GPIO_IntClear(GPIO_PT, PORT_NO, Bit_NO);
 		}

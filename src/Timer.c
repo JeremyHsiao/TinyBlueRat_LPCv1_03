@@ -28,14 +28,6 @@
 #include "Io.h"
 #include "VirtualSerial.h"
 
-#ifdef _MY_UNIT_TEST_
-extern void IR_RX_TIMER32_0_CAP0_IRQHandler(void) {}
-extern void IR_TX_TIMER32_0_MATCH0_IRQHandler(void) {}
-#else
-extern void IR_RX_TIMER32_0_CAP0_IRQHandler(void);
-extern void IR_TX_TIMER32_0_MATCH0_IRQHandler(void);
-#endif // _MY_UNIT_TEST_
-
 volatile 	uint32_t		LastCaptureTime_IR;
 volatile 	uint32_t		LastCaptureTime_CEC;
 volatile 	uint32_t		LastCaptureTime_HSync;
@@ -98,7 +90,6 @@ void TIMER32_0_IRQHandler(void)
 
 	if (Chip_TIMER_MatchPending(LPC_TIMER32_0, MATCH_0))
 	{
-		IR_TX_TIMER32_0_MATCH0_IRQHandler();
 		Chip_TIMER_ClearMatch(LPC_TIMER32_0, MATCH_0);
 	}
 
@@ -325,13 +316,8 @@ void Timer_Init(void)
 	Chip_TIMER_ResetOnMatchEnable(LPC_TIMER32_1,MATCH_3);
 
 	/* Enable the selected PWMs and enable Match3 */
-#ifdef _LPC_OPEN_1_03_
 	IP_TIMER_SetPWMMatchMode(LPC_TIMER32_1, MATCH_PWM_MODE_ENABLE, MATCH_0);
 	IP_TIMER_SetPWMMatchModeWithOR(LPC_TIMER32_1, MATCH_PWM_MODE_ENABLE, MATCH_3);
-#else
-	Chip_TIMER_SetPWMMatchModeEnable(LPC_TIMER32_1, MATCH_0);
-	Chip_TIMER_SetPWMMatchModeEnable(LPC_TIMER32_1, MATCH_3);
-#endif // #ifdef _LPC_OPEN_1_03_
 
 	Chip_TIMER_Enable(LPC_TIMER32_1);
 
