@@ -30,8 +30,8 @@
 #include "Timer.h"
 
 // Common
-#include "../src_app_IR_Width_Detector/Common.h"
-#include "../src_app_IR_Width_Detector/app_timer.h"
+#include "Common.h"
+#include "app_timer.h"
 #include "gpio.h"
 #include "Io.h"
 

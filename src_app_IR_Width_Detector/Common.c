@@ -5,9 +5,8 @@
  *      Author: Jeremy.Hsiao
  */
 
-#include "../src_app_IR_Width_Detector/Common.h"
-
 #include "chip.h"
+#include "Common.h"
 
 inline uint32_t TIMER_DIFF32(uint32_t current, uint32_t previous)
 {
