@@ -31,7 +31,6 @@
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="__CODE_RED"/>
 									<listOptionValue builtIn="false" value="USB_DEVICE_ONLY"/>
-									<listOptionValue builtIn="false" value="_MY_UNIT_TEST_"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.other.677791361" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0 -fno-builtin -ffunction-sections -fdata-sections" valueType="string"/>
 								<option id="gnu.c.compiler.option.include.paths.317796525" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
