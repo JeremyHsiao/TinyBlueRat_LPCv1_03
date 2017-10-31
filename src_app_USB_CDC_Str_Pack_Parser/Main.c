@@ -65,14 +65,31 @@ int app_main (void)
 
 	while (1)                                /* Loop forever */
 	{
-		ENUM_PARSING_STATE	current_state = ENUM_PARSING_STATE_WAIT_CARRIER_WIDTH_HIGH; // Initial State
-		uint8_t				input_char;
+		static ENUM_PARSING_STATE	current_state = ENUM_PARSING_STATE_WAIT_SYNC_BYTE; // Initial State
+		uint8_t						input_char;
 
 		USB_task_in_main_loop();
 
 		if(VirtualSerial_OneByteFromHost(&input_char)!=0)
 		{
 			current_state = ProcessInputChar_and_ReturnNextState(current_state,input_char);
+		}
+
+		USB_task_in_main_loop();
+		//
+		// Implement Tx Buffer UART output to make sure Parser performance
+		//
+		uint32_t temp_level, temp_width;
+		if(IR_Transmit_Buffer_Pop(&temp_level, &temp_width)!=FALSE)
+		{
+			uint8_t str[20], len=2;
+			str[0] = '0' + temp_level;
+			str[1] = ':';
+			temp_width = (temp_width * TIMER0_1uS_CNT);
+			len += itoa_10_LF_CR(temp_width,(str+2));
+			str[len++] = '\r';
+			str[len++] = '\n';
+			VirtualSerial_MultiByteToHost(str, (uint16_t) len );
 		}
 
 //		// Check if pulse available

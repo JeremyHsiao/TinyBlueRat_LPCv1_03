@@ -54,80 +54,10 @@ void IR_TX_TIMER32_0_MATCH0_IRQHandler(void) {}
 
 void IR_RX_TIMER32_0_CAP0_IRQHandler(void)
 {
-	uint32_t 		cnt, temp_level, temp_width;
-
-	cnt = Chip_TIMER_ReadCapture(LPC_TIMER32_0, 0);
-	temp_width = TIMER_DIFF32(cnt, LastCaptureTime_IR);
-	LastCaptureTime_IR = cnt;
-	temp_level = Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, IR_RX_GPIO_PORT_NUM, IR_RX_GPIO_BIT_NUM);
-
-//	if (temp_width > 1000000 )		// Check if width is larger than 1 sec
-//	{
-//		// Skip pulse-width if it is >= 100ms
-//		//temp_width = 0xffffff;
-//	}
-//	else
-	{
-		sRC_TIMETABLE[bIrTimeIndexIn].wTimeStamp =	( temp_width );		// 1us count
-
-		if(temp_level==0)	// Please check
-		{
-			// current level is low -> triggered by falling edge -> previous width is high
-			sRC_TIMETABLE[bIrTimeIndexIn].bLevel = 0;
-		}
-		else
-		{
-			// current level is high -> triggered by rising edge -> previous width is low
-			sRC_TIMETABLE[bIrTimeIndexIn].bLevel = 1;
-		}
-
-		cnt = INC_INDEX8(bIrTimeIndexIn, IR_TBL_MAX);
-		if(cnt==bIrTimeIndexOut)
-		{
-			while (1);  // Trap
-			//printfs ("ERR:ABC\r\n");
-		}
-		else
-		{
-			bIrTimeIndexIn = cnt;
-		}
-	}
 }
 
 void IR_TX_TIMER32_0_MATCH0_IRQHandler(void)
 {
-	uint32_t 		cnt, temp_level, temp_width;
-
-	// Prepare for next interrupt if more data to transmit
-	if(IR_Transmit_Buffer_Pop(&temp_level, &temp_width)!=FALSE)
-	{
-
-		// set IR output pulse
-		Setup_IR_PWM_Pulse_by_IR_Level(temp_level);
-
-		// set output width for this pulse
-		cnt = (temp_width * TIMER0_1uS_CNT);
-
-//		// Error prevention
-//		if (Check_PWM_Pulse_Width(cnt)==FALSE)
-//		{
-//			printfs("timer32.c L94\r\n");
-//		}
-
-//		UARTputchar('0'+temp_level);
-//		UARTprintf(":%d\r\n", temp_width);
-
-		Chip_TIMER_AddMatch(LPC_TIMER32_0, MATCH_0, cnt);
-	}
-	else
-	{
-		// No more data
-		Setup_IR_PWM_Pulse_by_IR_Level(0);
-
-		IR_Transmitter_Running = 0;
-		Chip_TIMER_MatchDisableInt(LPC_TIMER32_0, MATCH_0);
-		IR_LED_OUT_LOW;
-	}
 }
 
 #endif // #ifdef _MY_UNIT_TEST_
