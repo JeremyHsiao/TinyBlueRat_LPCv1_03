@@ -53,7 +53,11 @@ ENUM_PARSING_STATE ProcessInputChar_and_ReturnNextState(ENUM_PARSING_STATE curre
             break;
 
         case ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_1ST_INPUT:
-            if((input_byte&0x80)!=0)    // High bit not zero --> 4 bytes width data (highest bit will be removed)
+            if(input_byte==0xff)
+            {
+            	next_state = ENUM_PARSING_STATE_WAIT_SYNC_BYTE;
+            }
+            else if((input_byte&0x80)!=0)    // High bit not zero --> 4 bytes width data (highest bit will be removed)
             {
                 temp_buf = input_byte;	// Keep highest bit as 1 --> to be removed when last byte received
                 next_state = ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_LONG_2ND;		// 4 byte data
@@ -80,8 +84,8 @@ ENUM_PARSING_STATE ProcessInputChar_and_ReturnNextState(ENUM_PARSING_STATE curre
         //  receiving 4-byte width
         //
         case ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_LONG_2ND:
-            temp_buf = (temp_buf<<8) + input_byte;
-            next_state = ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_LONG_3RD;
+       		temp_buf = (temp_buf<<8) + input_byte;
+       		next_state = ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_LONG_3RD;
             break;
 
         case ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_LONG_3RD:
@@ -91,17 +95,10 @@ ENUM_PARSING_STATE ProcessInputChar_and_ReturnNextState(ENUM_PARSING_STATE curre
 
         case ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_LONG_4TH:
             temp_buf = (temp_buf<<8) + input_byte;
-            if(temp_buf==0xffffffff)
-            {
-                next_state = ENUM_PARSING_STATE_WAIT_CARRIER_WIDTH_HIGH;    // 0xffffffff not allowed, so back to initial state
-            }
-            else
-            {
-            	temp_buf &= 0x7fffffff; // Remove highest bit here before pushing into queue
-                IR_Transmit_Buffer_Push(temp_level,temp_buf);
-                temp_level = (temp_level!=0)?0:1;
-                next_state = ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_1ST_INPUT;
-            }
+           	temp_buf &= 0x7fffffff; // Remove highest bit here before pushing into queue
+            IR_Transmit_Buffer_Push(temp_level,temp_buf);
+            temp_level = (temp_level!=0)?0:1;
+            next_state = ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_1ST_INPUT;
             break;
         //END
 
@@ -114,7 +111,7 @@ ENUM_PARSING_STATE ProcessInputChar_and_ReturnNextState(ENUM_PARSING_STATE curre
             {
                 next_state = ENUM_PARSING_STATE_UNKNOWN_STATE;
             }
-            //IR_Transmit_Buffer_Init();								// Reset if unexpected event
+            //IR_Transmit_Buffer_Init();							// Reset if unexpected event
             break;
 
         default:
