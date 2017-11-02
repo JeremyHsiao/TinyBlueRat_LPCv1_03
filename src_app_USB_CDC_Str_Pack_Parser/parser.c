@@ -47,7 +47,7 @@ ENUM_PARSING_STATE ProcessInputChar_and_ReturnNextState(ENUM_PARSING_STATE curre
             break;
 
         case ENUM_PARSING_STATE_WAIT_CARRIER_WIDTH_LOW:
-            PWM_period = ((temp_buf*256) + input_byte)/8;   // here we use 1us-count, original unit is 1/8us for each count so divided by 8
+            Next_PWM_period = ((temp_buf*256) + input_byte)/8;   // here we use 1us-count, original unit is 1/8us for each count so divided by 8
             temp_level = 1;									// First pulse is always 1 pulse
             next_state = ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_1ST_INPUT;	// Go to wait pulse
             break;
@@ -55,6 +55,7 @@ ENUM_PARSING_STATE ProcessInputChar_and_ReturnNextState(ENUM_PARSING_STATE curre
         case ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_1ST_INPUT:
             if(input_byte==0xff)
             {
+            	IR_Data_Ready =  true;
             	next_state = ENUM_PARSING_STATE_WAIT_SYNC_BYTE;
             }
             else if((input_byte&0x80)!=0)    // High bit not zero --> 4 bytes width data (highest bit will be removed)
@@ -74,7 +75,7 @@ ENUM_PARSING_STATE ProcessInputChar_and_ReturnNextState(ENUM_PARSING_STATE curre
         //
         case ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_WORD_LOW:
             temp_buf = (temp_buf<<8) + input_byte;
-            IR_Transmit_Buffer_Push(temp_level,temp_buf);
+            IR_Data_Buffer_Push(temp_level,temp_buf);
             temp_level = (temp_level!=0)?0:1;										// reverse pulse level
             next_state = ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_1ST_INPUT;		// back to wait for 1st byte
             break;
@@ -96,7 +97,7 @@ ENUM_PARSING_STATE ProcessInputChar_and_ReturnNextState(ENUM_PARSING_STATE curre
         case ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_LONG_4TH:
             temp_buf = (temp_buf<<8) + input_byte;
            	temp_buf &= 0x7fffffff; // Remove highest bit here before pushing into queue
-            IR_Transmit_Buffer_Push(temp_level,temp_buf);
+           	IR_Data_Buffer_Push(temp_level,temp_buf);
             temp_level = (temp_level!=0)?0:1;
             next_state = ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_1ST_INPUT;
             break;

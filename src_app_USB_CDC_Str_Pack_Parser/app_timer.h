@@ -24,6 +24,10 @@
 extern void 			IR_Transmit_Buffer_Init(void);
 extern uint8_t 			IR_Transmit_Buffer_Push(uint32_t temp_level, uint32_t temp_width );
 extern uint8_t 			IR_Transmit_Buffer_Pop(uint32_t *temp_level, uint32_t *temp_width );
+extern void 			IR_Data_Buffer_Init(void);
+extern uint8_t 			IR_Data_Buffer_Push(uint32_t temp_level, uint32_t temp_width );
+extern uint8_t 			IR_Data_Buffer_Pop(uint32_t *temp_level, uint32_t *temp_width );
+extern bool 			IR_Data_Buffer_Empty(void);
 
 typedef struct _RC_TIME_TABLE
 {
@@ -38,6 +42,8 @@ extern uint8_t 			bIrTimeIndexOut;
 extern sRC_TIME_TABLE 	sRC_TIMETABLE_Output[IR_TBL_MAX];
 extern uint8_t 			bIrTimeIndexIn_Output;
 extern uint8_t 			bIrTimeIndexOut_Output;
+extern Bool				IR_Data_Ready;
+
 
 #endif /* end _APP_TIMER_H_ */
 /*****************************************************************************

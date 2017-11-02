@@ -44,6 +44,7 @@ uint8_t  		bIrTimeIndexIn_Output;
 uint8_t  		bIrTimeIndexOut_Output;
 
 volatile uint32_t		IR_Transmitter_Running;
+Bool					IR_Data_Ready;
 
 #ifdef _MY_UNIT_TEST_
 
@@ -90,6 +91,12 @@ uint8_t IR_Transmit_Buffer_Push(uint32_t temp_level, uint32_t temp_width )
 	return TRUE;
 }
 
+void IR_Data_Buffer_Init(void)
+{
+	bIrTimeIndexIn  = 0;
+	bIrTimeIndexOut = 0;
+}
+
 uint8_t IR_Transmit_Buffer_Pop(uint32_t *temp_level, uint32_t *temp_width )
 {
 	if(bIrTimeIndexOut_Output != bIrTimeIndexIn_Output)
@@ -105,6 +112,52 @@ uint8_t IR_Transmit_Buffer_Pop(uint32_t *temp_level, uint32_t *temp_width )
 	return TRUE;
 }
 
+uint8_t IR_Data_Buffer_Push(uint32_t temp_level, uint32_t temp_width )
+{
+	uint32_t temp_index;
+
+	temp_index = INC_INDEX8(bIrTimeIndexIn, IR_TBL_MAX);
+
+	if( temp_index == bIrTimeIndexOut )		// Buffer Overrun
+	{
+		//putstr("IR_Data_Buffer_Push_overrun\r\n");
+		return FALSE;
+	}
+	else
+	{
+		sRC_TIMETABLE[bIrTimeIndexIn].bLevel     = temp_level;
+		sRC_TIMETABLE[bIrTimeIndexIn].wTimeStamp = temp_width;
+		bIrTimeIndexIn = temp_index;
+	}
+	return TRUE;
+}
+
+uint8_t IR_Data_Buffer_Pop(uint32_t *temp_level, uint32_t *temp_width )
+{
+	if(bIrTimeIndexOut != bIrTimeIndexIn)
+	{
+		*temp_level = (uint32_t) sRC_TIMETABLE[bIrTimeIndexOut].bLevel;
+		*temp_width = (uint32_t) sRC_TIMETABLE[bIrTimeIndexOut].wTimeStamp;
+		bIrTimeIndexOut = INC_INDEX8(bIrTimeIndexOut, IR_TBL_MAX);
+	}
+	else
+	{
+		return FALSE;
+	}
+	return TRUE;
+}
+
+bool IR_Data_Buffer_Empty(void)
+{
+	if(bIrTimeIndexOut != bIrTimeIndexIn)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 //
 //
 //

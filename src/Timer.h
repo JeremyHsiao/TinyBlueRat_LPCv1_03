@@ -60,6 +60,9 @@ extern volatile	uint32_t		PWM_period;
 extern volatile	uint32_t		PWM_duty_cycle;
 extern          Bool 			SW_Timer_Timeout;
 extern volatile uint32_t 		SystemTimer;
+extern volatile	uint32_t		Next_PWM_period;
+extern volatile	uint32_t		Next_PWM_duty_cycle;
+
 extern void Timer_Init(void);
 extern void Delayus(uint32_t delay_us_value);
 extern void SetMyTimer_us(uint32_t delay_us_value);

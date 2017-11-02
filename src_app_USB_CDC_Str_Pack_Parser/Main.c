@@ -24,7 +24,8 @@ extern void SystemInit(void);
 
 void IrDA_Int_Handler(void) {} // empty function in this application
 
-uint32_t itoa_10_LF_CR(uint32_t value, char* result) {
+uint32_t itoa_10_LF_CR(uint32_t value, char* result)
+{
 	// check that the base if valid
 
 	char* ptr = result, *ptr1 = result, tmp_char;
@@ -51,6 +52,28 @@ uint32_t itoa_10_LF_CR(uint32_t value, char* result) {
 	return str_len;
 }
 
+bool Output_Tx_Buffer_UART(void)
+ {
+	uint32_t temp_level, temp_width;
+
+	if (IR_Transmit_Buffer_Pop(&temp_level, &temp_width) != FALSE) {
+		char str[20];
+		int  len = 2;
+		str[0] = '0' + temp_level;
+		str[1] = ':';
+		temp_width = (temp_width * TIMER0_1uS_CNT);
+		len += itoa_10_LF_CR(temp_width, (str + 2));
+		str[len++] = '\r';
+		str[len++] = '\n';
+		VirtualSerial_MultiByteToHost(str, (uint16_t) len);
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
 int app_main (void)
 {
     SystemInit();
@@ -61,11 +84,14 @@ int app_main (void)
 	GPIOInit();
 	Set_LED(1);
 
+	IR_Data_Buffer_Init();
+	IR_Data_Ready =  false;
 	IR_Transmit_Buffer_Init();
 
 	while (1)                                /* Loop forever */
 	{
 		static ENUM_PARSING_STATE	current_state = ENUM_PARSING_STATE_WAIT_SYNC_BYTE; // Initial State
+		uint32_t 					temp_level, temp_width;
 		uint8_t						input_char;
 
 		USB_task_in_main_loop();
@@ -76,21 +102,27 @@ int app_main (void)
 		}
 
 		USB_task_in_main_loop();
+
+		if (IR_Data_Ready)
+		{
+			IR_Data_Ready =  false;
+			while(Output_Tx_Buffer_UART())
+			{
+				USB_task_in_main_loop();
+			}
+
+			PWM_period = Next_PWM_period;
+			PWM_duty_cycle = Next_PWM_duty_cycle;
+			while(IR_Data_Buffer_Pop(&temp_level, &temp_width))
+			{
+				IR_Transmit_Buffer_Push(temp_level, temp_width);
+			}
+			USB_task_in_main_loop();
+		}
 		//
 		// Implement Tx Buffer UART output to make sure Parser performance
 		//
-		uint32_t temp_level, temp_width;
-		if(IR_Transmit_Buffer_Pop(&temp_level, &temp_width)!=FALSE)
-		{
-			uint8_t str[20], len=2;
-			str[0] = '0' + temp_level;
-			str[1] = ':';
-			temp_width = (temp_width * TIMER0_1uS_CNT);
-			len += itoa_10_LF_CR(temp_width,(str+2));
-			str[len++] = '\r';
-			str[len++] = '\n';
-			VirtualSerial_MultiByteToHost(str, (uint16_t) len );
-		}
+		Output_Tx_Buffer_UART();
 
 //		// Check if pulse available
 //		if (bIrTimeIndexOut != bIrTimeIndexIn)
