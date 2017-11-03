@@ -130,7 +130,7 @@ inline void USB_task_in_main_loop(void)
 {
 //	VirtualSerial_USB_USBTask();
 	USB_USBTask(CDC_IF_PTR->Config.PortNumber, USB_MODE_Device);
-	VirtualSerial_FinishDataTyHost();
+	VirtualSerial_FinishDataToHost();
 	USB_USBTask(CDC_IF_PTR->Config.PortNumber, USB_MODE_Device); // Add another one in between
 
 	HID_Device_USBTask(HID_Mouse_PTR);

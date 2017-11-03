@@ -145,7 +145,7 @@ void VirtualSerial_OneByteToHost(uint8_t output_char)
 	while(ret==0)
 	{
 		// Cannot insert to Ring buffer -> need to consume it first
-		VirtualSerial_FinishDataTyHost();
+		VirtualSerial_FinishDataToHost();
 		ret = RingBuffer_Insert(&cdc_txring, to_host_data);
 	}
 }
@@ -163,7 +163,7 @@ void VirtualSerial_MultiByteToHost(uint8_t *to_host_data, uint16_t bytes_to_writ
 	while (bytes>0)
 	{
 		// Flush out ring buffer data before continuing.
-		VirtualSerial_FinishDataTyHost();
+		VirtualSerial_FinishDataToHost();
 		/* A proper wait handler must be added here */
 		ret = RingBuffer_InsertMult(&cdc_txring, p8, bytes);
 		bytes -= ret;
@@ -171,7 +171,7 @@ void VirtualSerial_MultiByteToHost(uint8_t *to_host_data, uint16_t bytes_to_writ
 	}
 }
 
-void VirtualSerial_FinishDataTyHost(void)
+void VirtualSerial_FinishDataToHost(void)
 {
 	int bytes_to_write = -1;
 	uint8_t to_host_data[VIRTUAL_SERIAL_UART_SIZE];
