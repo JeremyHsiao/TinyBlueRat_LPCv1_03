@@ -59,6 +59,38 @@ void IR_RX_TIMER32_0_CAP0_IRQHandler(void)
 
 void IR_TX_TIMER32_0_MATCH0_IRQHandler(void)
 {
+	uint32_t 		cnt, temp_level, temp_width;
+
+	// Prepare for next interrupt if more data to transmit
+	if(IR_Transmit_Buffer_Pop(&temp_level, &temp_width)!=FALSE)
+	{
+
+		// set IR output pulse
+		Setup_IR_PWM_Pulse_by_IR_Level(temp_level);
+
+		// set output width for this pulse
+		cnt = (temp_width * TIMER0_1uS_CNT);
+
+//		// Error prevention
+//		if (Check_PWM_Pulse_Width(cnt)==FALSE)
+//		{
+//			printfs("timer32.c L94\r\n");
+//		}
+
+//		UARTputchar('0'+temp_level);
+//		UARTprintf(":%d\r\n", temp_width);
+
+		Chip_TIMER_AddMatch(LPC_TIMER32_0, MATCH_0, cnt);
+	}
+	else
+	{
+		// No more data
+		Setup_IR_PWM_Pulse_by_IR_Level(0);
+
+		IR_Transmitter_Running = 0;
+		Chip_TIMER_MatchDisableInt(LPC_TIMER32_0, MATCH_0);
+		//IR_LED_OUT_LOW;
+	}
 }
 
 #endif // #ifdef _MY_UNIT_TEST_
@@ -218,6 +250,7 @@ void IR_Transmit_Buffer_StartSend(void)
 void Setup_IR_PWM_Pulse_by_IR_Level(uint32_t bLevel)
 {
 	uint32_t	temp;
+
 	if(bLevel != 0)
 	{
 		temp = (PWM_period*PWM_duty_cycle)/100;  /* Duty cycle X% output on PIO1_1 */
