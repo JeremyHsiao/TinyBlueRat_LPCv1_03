@@ -48,6 +48,15 @@ ENUM_PARSING_STATE ProcessInputChar_and_ReturnNextState(ENUM_PARSING_STATE curre
 
         case ENUM_PARSING_STATE_WAIT_CARRIER_WIDTH_LOW:
             Next_PWM_period = ((temp_buf*256) + input_byte)/8;   // here we use 1us-count, original unit is 1/8us for each count so divided by 8
+            if(Next_PWM_period==0)
+            {
+            	Next_PWM_period = PWM_period;
+            	Next_PWM_duty_cycle=0; // flat
+            }
+            else
+            {
+            	Next_PWM_duty_cycle=50;
+            }
             temp_level = 1;									// First pulse is always 1 pulse
             next_state = ENUM_PARSING_STATE_WAIT_PULSE_WIDTH_WAIT_1ST_INPUT;	// Go to wait pulse
             break;
