@@ -24,7 +24,7 @@ extern void SystemInit(void);
 
 void IrDA_Int_Handler(void) {} // empty function in this application
 
-uint32_t itoa_10_LF_CR(uint32_t value, char* result)
+uint32_t itoa_10(uint32_t value, char* result)
 {
 	// check that the base if valid
 
@@ -38,10 +38,6 @@ uint32_t itoa_10_LF_CR(uint32_t value, char* result)
 		*ptr++ = "0123456789" [tmp_value];
 		str_len++;
 	} while ( value );
-	*ptr++= '\r';
-	*ptr++= '\n';
-	str_len++;
-	str_len++;
 
 	*ptr-- = '\0';
 	while(ptr1 < ptr) {
@@ -62,7 +58,7 @@ bool Output_Tx_Buffer_UART(void)
 		str[0] = '0' + temp_level;
 		str[1] = ':';
 		temp_width = (temp_width * TIMER0_1uS_CNT);
-		len += itoa_10_LF_CR(temp_width, (str + 2));
+		len += itoa_10(temp_width, (str + 2));
 		str[len++] = '\r';
 		str[len++] = '\n';
 		VirtualSerial_MultiByteToHost(str, (uint16_t) len);
@@ -106,23 +102,41 @@ int app_main (void)
 		if (IR_Data_Ready)
 		{
 			IR_Data_Ready =  false;
-			while(Output_Tx_Buffer_UART())
-			{
-				USB_task_in_main_loop();
-			}
+//			while(Output_Tx_Buffer_UART())
+//			{
+//				USB_task_in_main_loop();
+//			}
 
-			PWM_period = Next_PWM_period;
-			PWM_duty_cycle = Next_PWM_duty_cycle;
 			while(IR_Data_Buffer_Pop(&temp_level, &temp_width))
 			{
 				IR_Transmit_Buffer_Push(temp_level, temp_width);
 			}
 			USB_task_in_main_loop();
+
+			//
+			// Here we assume that previous Tx are either done or same frequency/duty-cycle
+			//
+
+			{
+				char str[16];
+				int  len;
+				len = itoa_10(bIrTimeIndexIn_Output, str);
+				str[len++] = '\n';
+				len += itoa_10(bIrTimeIndexOut_Output, (str+len));
+				str[len++] = '\n';
+				VirtualSerial_MultiByteToHost(str, (uint16_t) len);
+
+			}
+
+			PWM_period = Next_PWM_period;
+			PWM_duty_cycle = Next_PWM_duty_cycle;
+			IR_Transmit_Buffer_StartSend();
+
 		}
 		//
 		// Implement Tx Buffer UART output to make sure Parser performance
 		//
-		Output_Tx_Buffer_UART();
+		//Output_Tx_Buffer_UART();
 
 //		// Check if pulse available
 //		if (bIrTimeIndexOut != bIrTimeIndexIn)
