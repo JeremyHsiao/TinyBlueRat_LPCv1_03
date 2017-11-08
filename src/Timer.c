@@ -43,8 +43,6 @@ volatile 	uint32_t		PWM_period =  (uint32_t) (PCLK_FREQUENCY/(38000));		// For 3
 volatile 	uint32_t		PWM_duty_cycle = 50;
 			Bool	 		SW_Timer_Timeout = FALSE;
 volatile 	uint32_t 		SystemTimer;
-volatile 	uint32_t		Next_PWM_period = (uint32_t) (PCLK_FREQUENCY/(38000));		// For 38KHz PWM pulse
-volatile 	uint32_t		Next_PWM_duty_cycle = 33; // 33%
 
 void SW_Delay_Timeout_IRQHandler(void)
 {
