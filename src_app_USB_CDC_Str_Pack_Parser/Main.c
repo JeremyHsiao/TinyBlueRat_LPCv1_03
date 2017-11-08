@@ -72,7 +72,9 @@ bool Output_Tx_Buffer_UART(void)
 
 int app_main (void)
 {
-    SystemInit();
+	uint32_t					IR_Repeat_Cnt;
+
+	SystemInit();
     Board_Init();
     MyUSB_Init();
 	Timer_Init();
@@ -81,12 +83,11 @@ int app_main (void)
 	Set_LED(1);
 
 	IR_Data_Buffer_Init();
-	IR_Data_Ready =  false;
 	IR_Transmit_Buffer_Init();
+	IR_Repeat_Cnt = 0;
 
 	while (1)                                /* Loop forever */
 	{
-		static ENUM_PARSING_STATE	current_state = ENUM_PARSING_STATE_WAIT_SYNC_BYTE; // Initial State
 		uint32_t 					temp_level, temp_width;
 		uint8_t						input_char;
 
@@ -94,45 +95,83 @@ int app_main (void)
 
 		if(VirtualSerial_OneByteFromHost(&input_char)!=0)
 		{
-			current_state = ProcessInputChar_and_ReturnNextState(current_state,input_char);
+			ProcessInputChar(input_char);
 		}
 
 		USB_task_in_main_loop();
 
-		if (IR_Data_Ready)
+		switch(Read_CMD_Status())
 		{
-			IR_Data_Ready =  false;
-//			while(Output_Tx_Buffer_UART())
-//			{
-//				USB_task_in_main_loop();
-//			}
+			case ENUM_CMD_STOP_CMD_RECEIVED:
+				IR_Repeat_Cnt=0;
+				Clear_CMD_Status();
+				{
+					char str[2];
+					int  len=0;
+					str[len++] = 'S';
+					str[len++] = '\n';
+					VirtualSerial_MultiByteToHost(str, (uint16_t) len);
+					USB_task_in_main_loop();
+				}
+				break;
 
-			while(IR_Data_Buffer_Pop(&temp_level, &temp_width))
-			{
-				IR_Transmit_Buffer_Push(temp_level, temp_width);
-			}
-			USB_task_in_main_loop();
+			case ENUM_CMD_REPEAT_COUNT_RECEIVED:
+				IR_Repeat_Cnt += Next_Repeat_Count_Get();
+				Next_Repeat_Count_Set(0);
+				Clear_CMD_Status();
+				{
+					char str[2];
+					int  len=0;
+					str[len++] = 'C';
+					str[len++] = '\n';
+					VirtualSerial_MultiByteToHost(str, (uint16_t) len);
+					USB_task_in_main_loop();
+				}
+				break;
 
-			//
-			// Here we assume that previous Tx are either done or same frequency/duty-cycle
-			//
+			case ENUM_CMD_WIDTH_DATA_READY:
+				while(bIrTimeIndexOut_Output != bIrTimeIndexIn_Output)
+				{
+					USB_task_in_main_loop();
+				}
+				while(IR_Data_Buffer_Pop(&temp_level, &temp_width))
+				{
+					IR_Transmit_Buffer_Push(temp_level, temp_width);
+				}
+				PWM_period = Next_PWM_Period_Get();
+				PWM_duty_cycle = Next_DutyCycle_Period_Get();
+				{
+					char str[16];
+					int  len;
+					len = itoa_10(bIrTimeIndexIn_Output, str);
+					str[len++] = ' ';
+					len += itoa_10(bIrTimeIndexOut_Output, (str+len));
+					str[len++] = ' ';
+					str[len++] = (Read_If_CheckSum_OK)?'o':'X';
+					str[len++] = '\n';
+					VirtualSerial_MultiByteToHost(str, (uint16_t) len);
+					USB_task_in_main_loop();
+				}
+				IR_Transmit_Buffer_StartSend();
+				Clear_CMD_Status();
+				break;
 
-			{
-				char str[16];
-				int  len;
-				len = itoa_10(bIrTimeIndexIn_Output, str);
-				str[len++] = '\n';
-				len += itoa_10(bIrTimeIndexOut_Output, (str+len));
-				str[len++] = '\n';
-				VirtualSerial_MultiByteToHost(str, (uint16_t) len);
-
-			}
-
-			PWM_period = Next_PWM_period;
-			PWM_duty_cycle = Next_PWM_duty_cycle;
-			IR_Transmit_Buffer_StartSend();
-
+			default:
+				break;
 		}
+
+		//if(bIrTimeIndexOut_Output == bIrTimeIndexIn_Output)
+//		{
+//			if (IR_Repeat_Cnt>0)
+//			{
+//				IR_Repeat_Cnt--;
+//				while(IR_Data_Buffer_Pop(&temp_level, &temp_width))
+//				{
+//                  IR_Transmit_Buffer_Push(temp_level, temp_width);
+//				}
+//			}
+//		}
+
 		//
 		// Implement Tx Buffer UART output to make sure Parser performance
 		//
@@ -180,6 +219,23 @@ int app_main (void)
 //		}
 //
 //		USB_task_in_main_loop();
+
+		//
+		// Here we assume that previous Tx are either done or same frequency/duty-cycle
+		//
+
+//		{
+//			char str[16];
+//			int  len;
+//			len = itoa_10(bIrTimeIndexIn_Output, str);
+//			str[len++] = '\n';
+//			len += itoa_10(bIrTimeIndexOut_Output, (str+len));
+//			str[len++] = '\n';
+//			VirtualSerial_MultiByteToHost(str, (uint16_t) len);
+//
+//		}
+
+
 
 	}
 }
