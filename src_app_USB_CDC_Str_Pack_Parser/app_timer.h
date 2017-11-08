@@ -24,6 +24,8 @@
 extern void 			IR_Transmit_Buffer_Init(void);
 extern uint8_t 			IR_Transmit_Buffer_Push(uint32_t temp_level, uint32_t temp_width );
 extern uint8_t 			IR_Transmit_Buffer_Pop(uint32_t *temp_level, uint32_t *temp_width );
+extern void 			IR_Transmit_Buffer_StartSend(void);
+
 extern void 			IR_Data_Buffer_Init(void);
 extern uint8_t 			IR_Data_Buffer_Push(uint32_t temp_level, uint32_t temp_width );
 extern uint8_t 			IR_Data_Buffer_Pop(uint32_t *temp_level, uint32_t *temp_width );
