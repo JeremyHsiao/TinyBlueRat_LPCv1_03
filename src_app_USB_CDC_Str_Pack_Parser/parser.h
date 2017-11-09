@@ -16,6 +16,7 @@ typedef enum {
     ENUM_CMD_STATE_MAX
 } ENUM_CMD_STATUS;
 
+extern void Init_ProcessInputChar_State(void);
 extern void ProcessInputChar(uint8_t input_byte);
 
 extern Bool Read_If_CheckSum_OK(void);

@@ -89,6 +89,11 @@ uint8_t Next_DutyCycle_Period_Get(void)
 	return Next_PWM_duty_cycle;
 }
 
+void Init_ProcessInputChar_State(void)
+{
+	current_state = ENUM_PARSING_STATE_WAIT_SYNC_BYTE;
+}
+
 void ProcessInputChar(uint8_t input_byte)
 {
     static uint32_t         		temp_buf = 0;

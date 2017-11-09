@@ -82,6 +82,7 @@ int app_main (void)
 	GPIOInit();
 	Set_LED(1);
 
+	Init_ProcessInputChar_State();
 	IR_Data_Buffer_Init();
 	IR_Transmit_Buffer_Init();
 	IR_Repeat_Cnt = 0;
@@ -105,6 +106,13 @@ int app_main (void)
 			case ENUM_CMD_STOP_CMD_RECEIVED:
 				IR_Repeat_Cnt=0;
 				Clear_CMD_Status();
+				while(bIrTimeIndexOut_Output != bIrTimeIndexIn_Output)
+				{
+					USB_task_in_main_loop();
+				}
+				Init_ProcessInputChar_State();
+				IR_Transmit_Buffer_Init();
+				IR_Data_Buffer_Init();
 				{
 					char str[2];
 					int  len=0;
@@ -123,7 +131,7 @@ int app_main (void)
 					char str[2];
 					int  len=0;
 					str[len++] = 'C';
-					str[len++] = '\n';
+					str[len++] = ' ';
 					VirtualSerial_MultiByteToHost(str, (uint16_t) len);
 					USB_task_in_main_loop();
 				}
@@ -140,6 +148,8 @@ int app_main (void)
 				}
 				PWM_period = Next_PWM_Period_Get();
 				PWM_duty_cycle = Next_DutyCycle_Period_Get();
+				IR_Transmit_Buffer_StartSend();
+				Clear_CMD_Status();
 				{
 					char str[16];
 					int  len;
@@ -152,8 +162,6 @@ int app_main (void)
 					VirtualSerial_MultiByteToHost(str, (uint16_t) len);
 					USB_task_in_main_loop();
 				}
-				IR_Transmit_Buffer_StartSend();
-				Clear_CMD_Status();
 				break;
 
 			default:

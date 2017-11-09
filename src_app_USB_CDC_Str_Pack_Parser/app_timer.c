@@ -53,6 +53,8 @@ void IR_TX_TIMER32_0_MATCH0_IRQHandler(void) {}
 
 #else
 
+extern void Setup_IR_PWM_Pulse_by_IR_Level(uint32_t bLevel);
+
 void IR_RX_TIMER32_0_CAP0_IRQHandler(void)
 {
 }
