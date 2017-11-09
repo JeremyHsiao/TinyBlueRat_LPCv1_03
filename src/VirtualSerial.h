@@ -236,7 +236,7 @@ extern USB_ClassInfo_CDC_Device_t	*CDC_IF_PTR;
 
 extern void VirtualSerial_OneByteToHost(uint8_t output_char);
 extern void VirtualSerial_MultiByteToHost(uint8_t *to_host_data, uint16_t bytes_to_write );
-extern void VirtualSerial_FinishDataTyHost(void);
+extern void VirtualSerial_FinishDataToHost(void);
 extern int16_t VirtualSerial_OneByteFromHost(uint8_t *from_host_data);
 extern int16_t VirtualSerial_MultiByteFromHost(uint8_t *from_host_data, uint16_t bytes_to_read );
 extern void VirtualSerial_Init(void);
