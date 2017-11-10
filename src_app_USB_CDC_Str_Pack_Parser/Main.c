@@ -101,71 +101,101 @@ int app_main (void)
 
 		USB_task_in_main_loop();
 
-		switch(Read_CMD_Status())
+		//		if((CheckSum_Ready()==true)&&(Read_CheckSum()==0))
+		//		{
+		//			Reset_CheckSum();
+		//			{
+		//				char str[2];
+		//				int  len=0;
+		//				str[len++] = '+';
+		//				str[len++] = '\n';
+		//				VirtualSerial_MultiByteToHost(str, (uint16_t) len);
+		//				USB_task_in_main_loop();
+		//			}
+		//		}
+
+		if(CheckSum_Ready()==true)
 		{
-			case ENUM_CMD_STOP_CMD_RECEIVED:
-				IR_Repeat_Cnt=0;
-				Clear_CMD_Status();
-				while(bIrTimeIndexOut_Output != bIrTimeIndexIn_Output)
+			if (Read_CheckSum()==0)
+			{
+				switch(Read_CMD_Status())
 				{
-					USB_task_in_main_loop();
+					case ENUM_CMD_STOP_CMD_RECEIVED:
+						IR_Repeat_Cnt=0;
+						Clear_CMD_Status();
+						while(bIrTimeIndexOut_Output != bIrTimeIndexIn_Output)
+						{
+							USB_task_in_main_loop();
+						}
+						Init_ProcessInputChar_State();
+						IR_Transmit_Buffer_Init();
+						IR_Data_Buffer_Init();
+						{
+							char str[2];
+							int  len=0;
+							str[len++] = 'S';
+							str[len++] = '\n';
+							VirtualSerial_MultiByteToHost(str, (uint16_t) len);
+							USB_task_in_main_loop();
+						}
+						break;
+
+					case ENUM_CMD_REPEAT_COUNT_RECEIVED:
+						IR_Repeat_Cnt += Next_Repeat_Count_Get();
+						Next_Repeat_Count_Set(0);
+						Clear_CMD_Status();
+						{
+							char str[2];
+							int  len=0;
+							str[len++] = 'B';
+							str[len++] = '\n';
+							VirtualSerial_MultiByteToHost(str, (uint16_t) len);
+							USB_task_in_main_loop();
+						}
+						break;
+
+					case ENUM_CMD_WIDTH_DATA_READY:
+						while(bIrTimeIndexOut_Output != bIrTimeIndexIn_Output)
+						{
+							USB_task_in_main_loop();
+						}
+						while(IR_Data_Buffer_Pop(&temp_level, &temp_width))
+						{
+							IR_Transmit_Buffer_Push(temp_level, temp_width);
+						}
+						PWM_period = Next_PWM_Period_Get();
+						PWM_duty_cycle = Next_DutyCycle_Period_Get();
+						IR_Transmit_Buffer_StartSend();
+						Clear_CMD_Status();
+						{
+							char str[16];
+							int  len;
+							len = itoa_10(bIrTimeIndexIn_Output, str);
+							str[len++] = ' ';
+							len += itoa_10(bIrTimeIndexOut_Output, (str+len));
+							str[len++] = '\n';
+							VirtualSerial_MultiByteToHost(str, (uint16_t) len);
+							USB_task_in_main_loop();
+						}
+						break;
+
+					default:
+						break;
 				}
-				Init_ProcessInputChar_State();
-				IR_Transmit_Buffer_Init();
-				IR_Data_Buffer_Init();
+			}
+			else
+			{
 				{
 					char str[2];
-					int  len=0;
-					str[len++] = 'S';
+					int len = 0;
+					str[len++] = 'X';
 					str[len++] = '\n';
 					VirtualSerial_MultiByteToHost(str, (uint16_t) len);
 					USB_task_in_main_loop();
 				}
-				break;
 
-			case ENUM_CMD_REPEAT_COUNT_RECEIVED:
-				IR_Repeat_Cnt += Next_Repeat_Count_Get();
-				Next_Repeat_Count_Set(0);
-				Clear_CMD_Status();
-				{
-					char str[2];
-					int  len=0;
-					str[len++] = 'C';
-					str[len++] = ' ';
-					VirtualSerial_MultiByteToHost(str, (uint16_t) len);
-					USB_task_in_main_loop();
-				}
-				break;
-
-			case ENUM_CMD_WIDTH_DATA_READY:
-				while(bIrTimeIndexOut_Output != bIrTimeIndexIn_Output)
-				{
-					USB_task_in_main_loop();
-				}
-				while(IR_Data_Buffer_Pop(&temp_level, &temp_width))
-				{
-					IR_Transmit_Buffer_Push(temp_level, temp_width);
-				}
-				PWM_period = Next_PWM_Period_Get();
-				PWM_duty_cycle = Next_DutyCycle_Period_Get();
-				IR_Transmit_Buffer_StartSend();
-				Clear_CMD_Status();
-				{
-					char str[16];
-					int  len;
-					len = itoa_10(bIrTimeIndexIn_Output, str);
-					str[len++] = ' ';
-					len += itoa_10(bIrTimeIndexOut_Output, (str+len));
-					str[len++] = ' ';
-					str[len++] = (Read_If_CheckSum_OK)?'o':'X';
-					str[len++] = '\n';
-					VirtualSerial_MultiByteToHost(str, (uint16_t) len);
-					USB_task_in_main_loop();
-				}
-				break;
-
-			default:
-				break;
+			}
+			Reset_CheckSum();
 		}
 
 		//if(bIrTimeIndexOut_Output == bIrTimeIndexIn_Output)

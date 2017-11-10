@@ -9,17 +9,21 @@
 #define SRC_APP_USB_CDC_STR_PACK_PARSER_PARSER_H_
 
 typedef enum {
-	ENUM_CMD_NOTHING_AVAILABLE = 0,
+	ENUM_CMD_IDLE = 0,
+	ENUM_CMD_RECEIVING,
 	ENUM_CMD_STOP_CMD_RECEIVED,
 	ENUM_CMD_REPEAT_COUNT_RECEIVED,
 	ENUM_CMD_WIDTH_DATA_READY,
+	ENUM_CMD_UNKNOWN,
     ENUM_CMD_STATE_MAX
 } ENUM_CMD_STATUS;
 
 extern void Init_ProcessInputChar_State(void);
 extern void ProcessInputChar(uint8_t input_byte);
 
-extern Bool Read_If_CheckSum_OK(void);
+extern Bool CheckSum_Ready(void);
+extern uint8_t Read_CheckSum(void);
+extern void Reset_CheckSum(void);
 extern ENUM_CMD_STATUS Read_CMD_Status(void);
 extern void Clear_CMD_Status(void);
 extern void Next_Repeat_Count_Set(uint8_t new_cnt);
